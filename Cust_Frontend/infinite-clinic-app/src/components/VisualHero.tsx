@@ -1,4 +1,4 @@
-import { Box, Button, Container, Flex, Heading, Text, VStack, Image as ChakraImage, color } from '@chakra-ui/react';
+import { Box, Button, Container, Flex, Heading, Text, VStack, Image as ChakraImage } from '@chakra-ui/react';
 import { Link as ScrollLink } from 'react-scroll';
 
 export const VisualHero = () => {
