@@ -12,7 +12,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '.railway.app',  # Railway hosting
-    '.render.com',   # Render hosting
+    'infinite-clinic-app.onrender.com',   # Render hosting
     '.herokuapp.com', # Heroku hosting
     'your-domain.com',  # Replace with your actual domain
     'www.your-domain.com',  # Replace with your actual domain
