@@ -9,30 +9,23 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'your-production-secret-key-here')
 
 # ALLOWED_HOSTS for production
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '.railway.app',  # Railway hosting
-    'infinite-clinic-app.onrender.com',   # Render hosting
-    '.herokuapp.com', # Heroku hosting
-    'your-domain.com',  # Replace with your actual domain
-    'www.your-domain.com',  # Replace with your actual domain
+    'infinite-clinic-app.onrender.com',
+    '.onrender.com',
 ]
+
 
 # CORS settings for production
 CORS_ALLOWED_ORIGINS = [
-    "https://your-frontend.vercel.app",  # Replace with your Vercel URL
-    "https://your-domain.com",  # Replace with your actual domain
-    "https://www.your-domain.com",  # Replace with your actual domain
-    "http://localhost:3000",  # For local testing
-    "http://localhost:5174",  # For local testing
+    "https://infinite-clinic-app.vercel.app",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False  # Disable in production
+CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://your-domain.com",  # Replace with your actual domain
-    "https://www.your-domain.com",  # Replace with your actual domain
+    "https://infinite-clinic-app.vercel.app",
 ]
+
 
 # Security settings for production
 SECURE_BROWSER_XSS_FILTER = True
@@ -40,6 +33,12 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+SESSION_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SAMESITE = "None"
 
 # HTTPS settings (enable when you have SSL certificate)
 # SECURE_SSL_REDIRECT = True
