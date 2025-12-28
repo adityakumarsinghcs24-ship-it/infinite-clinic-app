@@ -4,7 +4,7 @@ import {
 import { useState } from 'react';
 import { API_ENDPOINTS } from '../config/api';
 
-export const Cart = ({ cart, onRemove, onEditInfo }: any) => {
+export const Cart = ({ cart, onRemove }: any) => {
   const [isCheckoutComplete, setIsCheckoutComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<any>(null);
@@ -14,11 +14,6 @@ export const Cart = ({ cart, onRemove, onEditInfo }: any) => {
   const safeCart = cart || [];
   const cartTotal = safeCart.reduce((total: number, item: any) => total + (item.price * item.patients.length), 0);
 
-  const needsInfoEdit = (item: any) => {
-    if (item.patients.length > 1) return true;
-    if (item.patients.length === 1 && item.patients[0].name !== 'Self') return true;
-    return false;
-  };
 
   const handleCheckout = async () => {
     setIsLoading(true);
