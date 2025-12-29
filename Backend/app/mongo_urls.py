@@ -1,7 +1,11 @@
 from django.urls import path
-from . import mongo_views, mongo_auth
+from . import mongo_views, mongo_auth, health_views
 
 urlpatterns = [
+    # Health check endpoints
+    path('health/', health_views.health_check, name='health-check'),
+    path('warm-up/', health_views.warm_up, name='warm-up'),
+    
     # Authentication endpoints (MongoDB)
     path('auth/register/', mongo_auth.register, name='mongo-register'),
     path('auth/login/', mongo_auth.login, name='mongo-login'),

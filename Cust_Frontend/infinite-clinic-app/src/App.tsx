@@ -5,6 +5,7 @@ import { Link as ScrollLink } from 'react-scroll';
 import { Routes, Route, Link as RouterLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { keepAliveService } from './services/keepAlive';
 
 import { HomePage } from './components/HomePage';
 import { Footer } from './components/Footer';
@@ -114,6 +115,16 @@ function AppContent() {
   const preloaderLogoRef = useRef<HTMLHeadingElement>(null);
   const loadingBarRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+
+  useEffect(() => {
+    // Start keep-alive service to prevent cold starts
+    keepAliveService.start();
+    
+    // Cleanup on unmount
+    return () => {
+      keepAliveService.stop();
+    };
+  }, []);
 
   useEffect(() => {
     const animationTimeout = setTimeout(() => {

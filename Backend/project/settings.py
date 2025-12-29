@@ -51,8 +51,19 @@ INSTALLED_APPS = [
     'consult_booking',
     'test_booking',
     "django_filters",
-
 ]
+
+# Caching Configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5 minutes
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        }
+    }
+}
 
 
 
@@ -84,10 +95,10 @@ REST_FRAMEWORK = {
     ]
 }
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    "ROTATE_REFRESH_TOKENS": False,
-    "BLACKLIST_AFTER_ROTATION": False,
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),  # Increased from 10 minutes
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # Increased from 1 day
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": False,
 
     'AUTH_COOKIE': 'access_token',  # Cookie name for the access token
@@ -139,12 +150,24 @@ import mongoengine
 MONGODB_SETTINGS = {
     'db': config('MONGO_DB_NAME', default='infinite_clinic_db'),
     'host': config('MONGO_URI', default='mongodb://localhost:27017'),
+    'maxPoolSize': 50,  # Maximum number of connections
+    'minPoolSize': 5,   # Minimum number of connections
+    'maxIdleTimeMS': 30000,  # Close connections after 30 seconds of inactivity
+    'serverSelectionTimeoutMS': 5000,  # 5 second timeout for server selection
+    'socketTimeoutMS': 20000,  # 20 second socket timeout
+    'connectTimeoutMS': 10000,  # 10 second connection timeout
 }
 
-# Connect to MongoDB
+# Connect to MongoDB with optimized settings
 mongoengine.connect(
     db=MONGODB_SETTINGS['db'],
-    host=MONGODB_SETTINGS['host']
+    host=MONGODB_SETTINGS['host'],
+    maxPoolSize=MONGODB_SETTINGS['maxPoolSize'],
+    minPoolSize=MONGODB_SETTINGS['minPoolSize'],
+    maxIdleTimeMS=MONGODB_SETTINGS['maxIdleTimeMS'],
+    serverSelectionTimeoutMS=MONGODB_SETTINGS['serverSelectionTimeoutMS'],
+    socketTimeoutMS=MONGODB_SETTINGS['socketTimeoutMS'],
+    connectTimeoutMS=MONGODB_SETTINGS['connectTimeoutMS'],
 )
 
 
