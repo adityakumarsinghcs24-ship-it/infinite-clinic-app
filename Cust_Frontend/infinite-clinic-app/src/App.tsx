@@ -16,6 +16,7 @@ import { TestAPI } from './components/TestAPI';
 import { Debug } from './components/Debug';
 import { SimpleLogin } from './components/SimpleLogin';
 import { BasicTest } from './components/BasicTest';
+import { ImageDebug } from './components/ImageDebug';
 
 
 const Header = () => {
@@ -172,6 +173,7 @@ function AppContent() {
             <Route path="/signup" element={<AuthPage />} />
             <Route path="/test-api" element={<TestAPI />} />
             <Route path="/debug" element={<Debug />} />
+            <Route path="/image-debug" element={<ImageDebug />} />
             <Route path="/simple-login" element={<SimpleLogin />} />
             <Route path="/basic-test" element={<BasicTest />} />
           </Routes>

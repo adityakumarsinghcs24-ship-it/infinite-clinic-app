@@ -3,28 +3,27 @@ import { SafeImage } from './SafeImage';
 
 export const ImageDebug = () => {
   const images = [
-    '/hero-book.PNG',
-    '/raikkonen2.avif',
-    '/clinic_temp.jpg',
-    '/your-doctor-image.png',
-    '/vite.svg'
+    { src: '/hero-book.PNG', name: 'Hero Book' },
+    { src: '/raikkonen2.avif', name: 'Raikkonen' },
+    { src: '/clinic_temp.jpg', name: 'Clinic Temp' },
+    { src: '/vite.svg', name: 'Vite Logo' }
   ];
 
   return (
     <Box p={4} bg="gray.100" borderRadius="md" m={4}>
       <Text fontSize="lg" fontWeight="bold" mb={4}>Image Loading Debug</Text>
       <VStack spacing={4}>
-        {images.map((src, index) => (
-          <Box key={index} border="1px" borderColor="gray.300" p={2} borderRadius="md">
-            <Text fontSize="sm" mb={2}>Path: {src}</Text>
+        {images.map((img, index) => (
+          <Box key={index} border="1px" borderColor="gray.300" p={2} borderRadius="md" w="100%">
+            <Text fontSize="sm" mb={2}>Path: {img.src} ({img.name})</Text>
             <SafeImage
-              src={src}
-              alt={`Test image ${index + 1}`}
+              src={img.src}
+              alt={`Test image ${img.name}`}
               maxW="200px"
               maxH="150px"
               objectFit="contain"
-              onLoad={() => console.log(`✅ Loaded: ${src}`)}
-              onError={() => console.log(`❌ Failed: ${src}`)}
+              onLoad={() => console.log(`✅ Loaded: ${img.src}`)}
+              onError={() => console.log(`❌ Failed: ${img.src}`)}
             />
           </Box>
         ))}
