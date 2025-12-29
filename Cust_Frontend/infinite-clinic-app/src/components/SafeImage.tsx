@@ -1,5 +1,6 @@
-import { Image as ChakraImage, type ImageProps } from '@chakra-ui/react';
+import { Image as ChakraImage } from '@chakra-ui/react';
 import { useState } from 'react';
+import type { ImageProps } from '@chakra-ui/react';
 
 interface SafeImageProps extends ImageProps {
   fallbackSrc?: string;
@@ -9,12 +10,14 @@ export const SafeImage = ({ src, fallbackSrc, onError, ...props }: SafeImageProp
   const [imgSrc, setImgSrc] = useState(src);
   const [hasError, setHasError] = useState(false);
 
-  const handleError = (e: any) => {
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     if (!hasError && fallbackSrc) {
       setHasError(true);
       setImgSrc(fallbackSrc);
     }
-    onError?.(e);
+    if (onError) {
+      onError(e);
+    }
   };
 
   return (
