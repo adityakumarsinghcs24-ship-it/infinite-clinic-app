@@ -1,5 +1,6 @@
-import { Container, Heading, Text, Button, Box, Flex, Image, VStack, Divider} from '@chakra-ui/react';
+import { Container, Heading, Text, Button, Box, Flex, VStack, Divider} from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
+import { SafeImage } from './SafeImage';
 
 
 const longText = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
@@ -63,7 +64,7 @@ export const AboutUs = () => {
 
         <Box flex={{ base: "1", md: '1.05'}}>
           <VStack spacing={8}>
-            <Image
+            <SafeImage
               src="/raikkonen2.avif"
               alt="Our Clinic Interior"
               borderRadius="2xl"
@@ -102,7 +103,7 @@ export const AboutUs = () => {
         </Box>
         
         <Box flex={{base: "1", md: '1'}}>
-          <Image
+          <SafeImage
             src="/clinic_temp.jpg"
             alt="Our Expert Team"
             borderRadius="20px"

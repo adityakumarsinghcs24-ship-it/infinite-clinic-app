@@ -1,5 +1,6 @@
-import { Box, Button, Container, Flex, Heading, Text, VStack, Image as ChakraImage } from '@chakra-ui/react';
+import { Box, Button, Container, Flex, Heading, Text, VStack } from '@chakra-ui/react';
 import { Link as ScrollLink } from 'react-scroll';
+import { SafeImage } from './SafeImage';
 
 export const VisualHero = () => {
   return (
@@ -55,7 +56,7 @@ export const VisualHero = () => {
             </ScrollLink>
           </VStack>
 
-          <ChakraImage
+          <SafeImage
             src="/hero-book.PNG"
             alt="A visual of diagnostic lab equipment"
             position="absolute"
