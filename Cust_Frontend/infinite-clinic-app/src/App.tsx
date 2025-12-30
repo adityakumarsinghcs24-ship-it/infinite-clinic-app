@@ -6,6 +6,7 @@ import { Routes, Route, Link as RouterLink, useLocation } from 'react-router-dom
 import { AnimatePresence, motion } from 'framer-motion';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { keepAliveService } from './services/keepAlive';
+import { getDisplayUsername } from './utils/userUtils';
 
 import { HomePage } from './components/HomePage';
 import { Footer } from './components/Footer';
@@ -68,7 +69,7 @@ const Header = () => {
         {isLoggedIn ? (
           <Menu>
             <MenuButton as={Button} backgroundColor='#384A5C' color='white' size="md">
-              Welcome, {user?.username}
+              Welcome, {getDisplayUsername(user?.username)}
             </MenuButton>
             <MenuList>
               <MenuItem onClick={logout}>Logout</MenuItem>

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { API_ENDPOINTS } from '../config/api';
+import { cleanUserData } from '../utils/userUtils';
 
 interface User {
   id: number;
@@ -23,13 +24,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check if user is logged in on app start
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      const userData = JSON.parse(savedUser);
+      // Clean up username if it contains email (for existing cached users)
+      const cleanedUserData = cleanUserData(userData);
+      
+      setUser(cleanedUserData);
+      // Update localStorage with cleaned data
+      localStorage.setItem('user', JSON.stringify(cleanedUserData));
     }
   }, []);
 
   const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+    // Clean up username if it contains email
+    const cleanedUserData = cleanUserData(userData);
+    
+    setUser(cleanedUserData);
+    localStorage.setItem('user', JSON.stringify(cleanedUserData));
   };
 
   const logout = () => {
