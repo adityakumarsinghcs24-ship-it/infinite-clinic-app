@@ -230,11 +230,11 @@ export const AuthPage = () => {
                 {isLogin ? 'Sign In' : 'Sign Up'}
               </Button>
 
-              <Text textAlign="center" fontSize="sm" color="#31373C">
+              <Text textAlign="center" fontSize="sm" color="#384a5c">
                 {isLogin ? "Don't have an account? " : "Already have an account? "}
                 <Button
                   variant="link"
-                  color="#384A5C"
+                  color="#ffffff" 
                   fontWeight="bold"
                   onClick={() => {
                     setIsLogin(!isLogin);
