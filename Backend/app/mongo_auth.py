@@ -115,7 +115,7 @@ def register(request):
             'message': 'User registered successfully',
             'user': {
                 'id': str(user.id),
-                'username': user.username,
+                'username': user.username.split('@')[0] if '@' in user.username else user.username,  # Extract username part
                 'email': user.email,
                 'role': user.role
             }
@@ -205,7 +205,7 @@ def login(request):
             'message': 'Login successful',
             'user': {
                 'id': str(user.id),
-                'username': user.username,
+                'username': user.username.split('@')[0] if '@' in user.username else user.username,  # Extract username part
                 'email': user.email,
                 'role': user.role
             }
@@ -293,7 +293,7 @@ def verify_token(request):
             'authenticated': True,
             'user': {
                 'id': str(user.id),
-                'username': user.username,
+                'username': user.username.split('@')[0] if '@' in user.username else user.username,  # Extract username part
                 'email': user.email,
                 'role': user.role
             }

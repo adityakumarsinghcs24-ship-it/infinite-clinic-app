@@ -92,7 +92,7 @@ export const AuthPage = () => {
         if (data.user) {
           login(data.user);
         } else {
-          // Fallback user data
+          // Fallback user data (shouldn't be needed now)
           login({
             id: 1,
             username: formData.email.split('@')[0],
