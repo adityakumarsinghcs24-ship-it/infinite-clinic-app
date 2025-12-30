@@ -2,7 +2,7 @@
 import { API_BASE_URL } from '../config/api';
 
 class KeepAliveService {
-  private intervalId: NodeJS.Timeout | null = null;
+  private intervalId: number | null = null;
   private readonly PING_INTERVAL = 10 * 60 * 1000; // 10 minutes
 
   start() {
@@ -10,7 +10,7 @@ class KeepAliveService {
     this.warmUp();
     
     // Set up periodic pings
-    this.intervalId = setInterval(() => {
+    this.intervalId = window.setInterval(() => {
       this.ping();
     }, this.PING_INTERVAL);
     
@@ -19,7 +19,7 @@ class KeepAliveService {
 
   stop() {
     if (this.intervalId) {
-      clearInterval(this.intervalId);
+      window.clearInterval(this.intervalId);
       this.intervalId = null;
       console.log('⏹️ Keep-alive service stopped');
     }
