@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { API_ENDPOINTS } from '../config/api';
 import { TimeSlotSelector } from './TimeSlotSelector';
 import { PrescriptionUpload } from './PrescriptionUpload';
+import { SimpleUploadTest } from './SimpleUploadTest';
 
 export const Cart = ({ cart, onRemove }: any) => {
   const [isCheckoutComplete, setIsCheckoutComplete] = useState(false);
@@ -236,36 +237,67 @@ export const Cart = ({ cart, onRemove }: any) => {
               />
 
               {/* Prescription Upload for each patient */}
-              {safeCart.length > 0 && (
-                <Box>
-                  <Heading size="sm" mb={4} color="#31373C">
-                    Upload Prescriptions (Optional)
-                  </Heading>
-                  <VStack spacing={4}>
-                    {safeCart.map((item: any) =>
-                      item.patients
-                        .filter((p: any) => p.name && !p.name.startsWith('Self'))
-                        .map((patient: any) => {
-                          const patientKey = `${item.cartId}_${patient.name}_${patient.age}`;
-                          return (
-                            <Box key={patientKey} w="100%">
-                              <Text fontSize="sm" fontWeight="medium" mb={2} color="#31373C">
-                                Prescription for {patient.name} (Age: {patient.age}) - {item.name}
-                              </Text>
-                              <PrescriptionUpload
-                                onFileUpload={(fileData, fileName) => 
-                                  handlePrescriptionUpload(patientKey, fileData, fileName)
-                                }
-                                onFileRemove={() => handlePrescriptionRemove(patientKey)}
-                                currentFile={prescriptionFiles[patientKey]}
-                              />
-                            </Box>
-                          );
-                        })
-                    )}
-                  </VStack>
-                </Box>
-              )}
+              <Box>
+                <Heading size="sm" mb={4} color="#31373C">
+                  Upload Prescriptions (Optional)
+                </Heading>
+                
+                {/* Debug: Always show at least one upload component */}
+                <VStack spacing={4}>
+                  <Box w="100%">
+                    <Text fontSize="sm" fontWeight="medium" mb={2} color="#31373C">
+                      Debug: Simple Upload Test
+                    </Text>
+                    <SimpleUploadTest />
+                  </Box>
+                  
+                  {safeCart.length > 0 && safeCart.map((item: any) => {
+                    const validPatients = item.patients.filter((p: any) => 
+                      p.name && !p.name.startsWith('Self') && p.name.trim() !== ''
+                    );
+                    
+                    console.log('Cart item:', item);
+                    console.log('Valid patients:', validPatients);
+                    
+                    if (validPatients.length === 0) {
+                      // Show a general upload for the test if no specific patients
+                      const generalKey = `${item.cartId}_general`;
+                      return (
+                        <Box key={generalKey} w="100%">
+                          <Text fontSize="sm" fontWeight="medium" mb={2} color="#31373C">
+                            Prescription for {item.name} (General)
+                          </Text>
+                          <PrescriptionUpload
+                            onFileUpload={(fileData, fileName) => 
+                              handlePrescriptionUpload(generalKey, fileData, fileName)
+                            }
+                            onFileRemove={() => handlePrescriptionRemove(generalKey)}
+                            currentFile={prescriptionFiles[generalKey]}
+                          />
+                        </Box>
+                      );
+                    }
+                    
+                    return validPatients.map((patient: any) => {
+                      const patientKey = `${item.cartId}_${patient.name}_${patient.age}`;
+                      return (
+                        <Box key={patientKey} w="100%">
+                          <Text fontSize="sm" fontWeight="medium" mb={2} color="#31373C">
+                            Prescription for {patient.name} (Age: {patient.age}) - {item.name}
+                          </Text>
+                          <PrescriptionUpload
+                            onFileUpload={(fileData, fileName) => 
+                              handlePrescriptionUpload(patientKey, fileData, fileName)
+                            }
+                            onFileRemove={() => handlePrescriptionRemove(patientKey)}
+                            currentFile={prescriptionFiles[patientKey]}
+                          />
+                        </Box>
+                      );
+                    });
+                  })}
+                </VStack>
+              </Box>
 
               {/* Booking Summary */}
               <Box borderWidth="1px" borderRadius="lg" p={4} bg="gray.50">
