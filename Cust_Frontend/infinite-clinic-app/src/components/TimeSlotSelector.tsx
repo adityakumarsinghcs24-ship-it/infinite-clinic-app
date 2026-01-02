@@ -64,20 +64,13 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
   const fetchTimeSlots = async (date: string) => {
     setIsLoading(true);
     try {
-      console.log('Fetching time slots for date:', date);
-      console.log('API URL:', `${API_ENDPOINTS.TIME_SLOTS}?date=${date}`);
-      
       const response = await fetch(`${API_ENDPOINTS.TIME_SLOTS}?date=${date}`);
-      
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
       const data = await response.json();
-      console.log('Response data:', data);
       
       if (data.error) {
         throw new Error(data.error);
@@ -87,7 +80,6 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
       
       // If no slots available, show info message
       if (!data.slots || data.slots.length === 0) {
-        console.log('No time slots found, showing fallback message');
         toast({
           title: 'No time slots available',
           description: 'Please select a different date or use custom time option',
