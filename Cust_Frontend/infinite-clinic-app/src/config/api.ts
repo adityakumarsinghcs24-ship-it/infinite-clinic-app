@@ -15,6 +15,9 @@ export const API_ENDPOINTS = {
   // Booking
   BOOK_TEST: `${API_BASE_URL}/mongo/book-test/`,
   
+  // Time Slots
+  TIME_SLOTS: `${API_BASE_URL}/mongo/time-slots/`,
+  
   // Dashboard
   DASHBOARD_STATS: `${API_BASE_URL}/mongo/dashboard/stats/`,
 };

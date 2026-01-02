@@ -3,9 +3,6 @@ from datetime import datetime
 import hashlib
 import secrets
 
-# ------------------------------
-# 👤 USER AUTHENTICATION (MongoDB)
-# ------------------------------
 class User(Document):
     ROLE_CHOICES = (
         ('admin', 'Admin'),
@@ -65,9 +62,7 @@ class JWTToken(Document):
         'indexes': ['token', 'user', 'expires_at']
     }
 
-# ------------------------------
-# 👩‍⚕️ PATIENTS
-# ------------------------------
+
 class Patient(Document):
     GENDER_CHOICES = (
         ('M', 'Male'),
@@ -81,6 +76,8 @@ class Patient(Document):
     gender = fields.StringField(max_length=1, choices=GENDER_CHOICES, required=True)
     phone_number = fields.StringField(max_length=15, null=True)  # Removed unique constraint
     email = fields.EmailField(null=True)  # Removed unique constraint
+    prescription_file = fields.StringField(null=True)  # Store file path/URL
+    prescription_filename = fields.StringField(null=True)  # Original filename
     created_at = fields.DateTimeField(default=datetime.utcnow)
     
     meta = {
@@ -115,9 +112,7 @@ class MemberPatient(Document):
         return f"{self.first_name} (Member of {self.owner.first_name})"
 
 
-# ------------------------------
-# 👨‍⚕️ CONSULTATIONS & TIMESLOTS
-# ------------------------------
+
 class Consultation(Document):
     docname = fields.StringField(max_length=255, required=True)
     specialization = fields.StringField(max_length=255, null=True)
@@ -168,9 +163,7 @@ class ConsultTimeSlot(Document):
         return f"{self.doctor.docname} — {self.date} {self.start_time.time()}-{self.end_time.time()} ({status})"
 
 
-# ------------------------------
-# 🧪 TESTS & TIMESLOTS
-# ------------------------------
+
 class Test(Document):
     name = fields.StringField(max_length=255, required=True)
     description = fields.StringField(null=True)
@@ -220,9 +213,6 @@ class TimeSlot(Document):
         return f"{self.date} {self.start_time.time()}-{self.end_time.time()} ({status})"
 
 
-# ------------------------------
-# 🛒 CART SYSTEM (Unified for Consult & Test)
-# ------------------------------
 class Cart(Document):
     patient = fields.ReferenceField(Patient, required=True, unique=True)
     created_at = fields.DateTimeField(default=datetime.utcnow)
@@ -263,3 +253,36 @@ class CartItem(Document):
     def __str__(self):
         item_name = self.consult.docname if self.item_type == "consult" else self.test.name
         return f"{item_name} x {self.quantity}"
+
+
+class Booking(Document):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled')
+    )
+    
+    booking_id = fields.StringField(max_length=50, required=True, unique=True)
+    patients = fields.ListField(fields.ReferenceField(Patient))
+    tests = fields.ListField(fields.StringField())  # Test names
+    total_amount = fields.DecimalField(min_value=0, precision=2, required=True)
+    booking_date = fields.DateField(required=True)
+    time_slot = fields.ReferenceField(TimeSlot, null=True)
+    preferred_time = fields.StringField(null=True)  # Fallback if no time slot selected
+    status = fields.StringField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    notes = fields.StringField(null=True)
+    created_at = fields.DateTimeField(default=datetime.utcnow)
+    updated_at = fields.DateTimeField(default=datetime.utcnow)
+    
+    meta = {
+        'collection': 'bookings',
+        'ordering': ['-created_at']
+    }
+    
+    def save(self, *args, **kwargs):
+        self.updated_at = datetime.utcnow()
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"Booking {self.booking_id} - {self.status}"

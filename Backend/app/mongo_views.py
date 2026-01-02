@@ -3,10 +3,14 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.http import JsonResponse
-from .mongo_models import Patient, Consultation, Test, Cart, CartItem
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from .mongo_models import Patient, Consultation, Test, Cart, CartItem, TimeSlot, Booking
 import json
+import base64
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, date, timedelta
+import os
 
 # Custom JSON encoder for MongoDB ObjectId
 class MongoJSONEncoder(json.JSONEncoder):
@@ -26,6 +30,8 @@ def serialize_patient(patient):
         'gender': patient.gender,
         'phone_number': patient.phone_number,
         'email': patient.email,
+        'prescription_file': patient.prescription_file,
+        'prescription_filename': patient.prescription_filename,
         'created_at': patient.created_at.isoformat() if patient.created_at else None
     }
 
@@ -182,15 +188,42 @@ def book_test_with_patients(request):
         data = request.data
         cart_items = data.get('cart_items', [])
         total_price = data.get('total_price', 0)
+        booking_date = data.get('booking_date')  # Expected format: YYYY-MM-DD
+        time_slot_id = data.get('time_slot_id')
+        preferred_time = data.get('preferred_time')
         
         print(f"Cart items: {cart_items}")  # Debug log
         print(f"Total price: {total_price}")  # Debug log
+        print(f"Booking date: {booking_date}, Time slot: {time_slot_id}")  # Debug log
+        
+        # Parse booking date
+        if booking_date:
+            try:
+                booking_date_obj = datetime.strptime(booking_date, '%Y-%m-%d').date()
+            except ValueError:
+                booking_date_obj = date.today()
+        else:
+            booking_date_obj = date.today()
+        
+        # Get time slot if provided
+        time_slot = None
+        if time_slot_id:
+            try:
+                time_slot = TimeSlot.objects.get(id=time_slot_id)
+                # Update booked slots
+                time_slot.booked_slots += 1
+                time_slot.save()
+            except TimeSlot.DoesNotExist:
+                pass
         
         # Store all patients from the booking
         booking_patients = []
         booking_info = {
             'booking_id': f"BK{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
             'total_amount': total_price,
+            'booking_date': booking_date_obj.isoformat(),
+            'time_slot': str(time_slot.id) if time_slot else None,
+            'preferred_time': preferred_time,
             'tests_booked': []
         }
         
@@ -224,14 +257,40 @@ def book_test_with_patients(request):
                     if not patient_data.get('name') or not patient_data.get('age'):
                         print(f"Skipping incomplete patient: {patient_data}")  # Debug log
                         continue
+                    
+                    # Handle prescription file if provided
+                    prescription_file_path = None
+                    prescription_filename = None
+                    
+                    if patient_data.get('prescription_file'):
+                        try:
+                            # Decode base64 file
+                            file_data = patient_data['prescription_file']
+                            if ',' in file_data:
+                                header, file_data = file_data.split(',', 1)
+                            
+                            file_content = base64.b64decode(file_data)
+                            filename = patient_data.get('prescription_filename', f'prescription_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.pdf')
+                            
+                            # Save file
+                            file_path = f'prescriptions/{filename}'
+                            saved_path = default_storage.save(file_path, ContentFile(file_content))
+                            prescription_file_path = saved_path
+                            prescription_filename = filename
+                            
+                            print(f"Saved prescription file: {saved_path}")  # Debug log
+                        except Exception as e:
+                            print(f"Error saving prescription file: {e}")  # Debug log
                         
                     # Create patient in MongoDB
                     patient = Patient(
                         first_name=patient_data.get('name', ''),
                         age=int(patient_data.get('age', 0)) if patient_data.get('age') else 0,
                         gender=patient_data.get('gender', '').upper()[:1] if patient_data.get('gender') else 'O',
-                        phone_number=None,
-                        email=None
+                        phone_number=patient_data.get('phone'),
+                        email=patient_data.get('email'),
+                        prescription_file=prescription_file_path,
+                        prescription_filename=prescription_filename
                     )
                     patient.save()
                     print(f"Saved patient: {patient.first_name} with ID: {patient.id}")  # Debug log
@@ -241,13 +300,27 @@ def book_test_with_patients(request):
                         'patient_id': str(patient.id),
                         'patient_name': patient.first_name,
                         'age': patient.age,
-                        'gender': patient.gender
+                        'gender': patient.gender,
+                        'has_prescription': bool(prescription_file_path)
                     }
                     
                     booking_patients.append(patient_info)
                     test_info['patient_details'].append(patient_info)
             
             booking_info['tests_booked'].append(test_info)
+        
+        # Create booking record
+        booking = Booking(
+            booking_id=booking_info['booking_id'],
+            patients=[Patient.objects.get(id=p['patient_id']) for p in booking_patients if p['type'] == 'other'],
+            tests=[item['test_name'] for item in booking_info['tests_booked']],
+            total_amount=total_price,
+            booking_date=booking_date_obj,
+            time_slot=time_slot,
+            preferred_time=preferred_time,
+            status='confirmed'
+        )
+        booking.save()
         
         print(f"Total patients saved to MongoDB: {len(booking_patients)}")  # Debug log
         print(f"Booking summary: {booking_info}")  # Debug log
@@ -261,6 +334,11 @@ def book_test_with_patients(request):
             'booking_id': booking_info['booking_id'],
             'total_patients_saved': len(booking_patients),
             'total_amount': total_price,
+            'booking_date': booking_date_obj.isoformat(),
+            'time_slot_info': {
+                'id': str(time_slot.id) if time_slot else None,
+                'time': f"{time_slot.start_time.strftime('%H:%M')} - {time_slot.end_time.strftime('%H:%M')}" if time_slot else preferred_time
+            },
             'booking_details': booking_info,
             'patients_saved': booking_patients
         }, status=status.HTTP_201_CREATED)
@@ -270,3 +348,72 @@ def book_test_with_patients(request):
         import traceback
         traceback.print_exc()  # Print full error trace
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Time Slots API
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def time_slots(request):
+    if request.method == 'GET':
+        try:
+            # Get date parameter (default to today)
+            date_str = request.GET.get('date')
+            if date_str:
+                try:
+                    target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                except ValueError:
+                    target_date = date.today()
+            else:
+                target_date = date.today()
+            
+            # Get available time slots for the date
+            slots = TimeSlot.objects.filter(date=target_date, available=True).order_by('start_time')
+            
+            slot_data = []
+            for slot in slots:
+                slot_info = {
+                    'id': str(slot.id),
+                    'date': slot.date.isoformat(),
+                    'start_time': slot.start_time.strftime('%H:%M'),
+                    'end_time': slot.end_time.strftime('%H:%M'),
+                    'display_time': f"{slot.start_time.strftime('%H:%M')} - {slot.end_time.strftime('%H:%M')}",
+                    'available_slots': slot.available_slots,
+                    'booked_slots': slot.booked_slots,
+                    'unlimited_patients': slot.unlimited_patients,
+                    'available': slot.available
+                }
+                slot_data.append(slot_info)
+            
+            return Response({
+                'date': target_date.isoformat(),
+                'slots': slot_data
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    elif request.method == 'POST':
+        try:
+            # Create new time slot (admin functionality)
+            data = request.data
+            
+            slot_date = datetime.strptime(data.get('date'), '%Y-%m-%d').date()
+            start_time = datetime.strptime(f"{data.get('date')} {data.get('start_time')}", '%Y-%m-%d %H:%M')
+            end_time = datetime.strptime(f"{data.get('date')} {data.get('end_time')}", '%Y-%m-%d %H:%M')
+            
+            time_slot = TimeSlot(
+                date=slot_date,
+                start_time=start_time,
+                end_time=end_time,
+                max_patients=data.get('max_patients'),
+                unlimited_patients=data.get('unlimited_patients', True)
+            )
+            time_slot.save()
+            
+            return Response({
+                'id': str(time_slot.id),
+                'message': 'Time slot created successfully'
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

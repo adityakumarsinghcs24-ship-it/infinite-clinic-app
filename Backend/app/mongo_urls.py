@@ -27,4 +27,7 @@ urlpatterns = [
     
     # Test Booking
     path('book-test/', mongo_views.book_test_with_patients, name='book-test'),
+    
+    # Time Slots
+    path('time-slots/', mongo_views.time_slots, name='time-slots'),
 ]
