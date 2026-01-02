@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: infinite-clinic-app
+    env: python
+    buildCommand: echo "No build needed - using simple API"
+    startCommand: python simple_working_api.py
+    envVars:
+      - key: PORT
+        value: 8000
