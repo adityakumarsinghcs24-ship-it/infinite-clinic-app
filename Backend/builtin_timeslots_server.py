@@ -215,12 +215,76 @@ class TimeSlotHandler(BaseHTTPRequestHandler):
             }, 500)
     
     def handle_time_slots_get(self, query_params):
-        """Handle time slots GET request"""
+        """Handle time slots GET request with MongoDB Atlas integration"""
         try:
             date_param = query_params.get('date', [date.today().isoformat()])[0]
             print(f"Fetching time slots for date: {date_param}")
             
-            # Load from JSON file (like MongoDB query)
+            # First try MongoDB Atlas connection
+            try:
+                from pymongo import MongoClient
+                
+                # MongoDB Atlas connection
+                mongo_uri = "mongodb+srv://clinic_admin:12345%40clinic@cluster0.1rbiryd.mongodb.net/?appName=Cluster0"
+                db_name = "infinite_clinic_db"
+                
+                print(f"🔄 Trying MongoDB Atlas connection...")
+                client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+                client.admin.command('ping')
+                
+                # Get time slots from MongoDB Atlas
+                db = client[db_name]
+                timeslots_collection = db['timeslots']
+                
+                # Parse date for MongoDB query
+                target_date = datetime.strptime(date_param, '%Y-%m-%d').date()
+                
+                # Query MongoDB Atlas
+                atlas_slots = list(timeslots_collection.find({
+                    'date': target_date,
+                    'available': True
+                }).sort('start_time', 1))
+                
+                if atlas_slots:
+                    # Convert MongoDB documents to API format
+                    slot_data = []
+                    for slot in atlas_slots:
+                        slot_info = {
+                            'id': str(slot['_id']),
+                            'date': slot['date'].isoformat() if hasattr(slot['date'], 'isoformat') else str(slot['date']),
+                            'start_time': slot['start_time'].strftime('%H:%M') if hasattr(slot['start_time'], 'strftime') else str(slot['start_time'])[:5],
+                            'end_time': slot['end_time'].strftime('%H:%M') if hasattr(slot['end_time'], 'strftime') else str(slot['end_time'])[:5],
+                            'display_time': f"{slot['start_time'].strftime('%H:%M') if hasattr(slot['start_time'], 'strftime') else str(slot['start_time'])[:5]} - {slot['end_time'].strftime('%H:%M') if hasattr(slot['end_time'], 'strftime') else str(slot['end_time'])[:5]}",
+                            'available_slots': slot.get('available_slots', 10),
+                            'booked_slots': slot.get('booked_slots', 0),
+                            'unlimited_patients': slot.get('unlimited_patients', False),
+                            'available': slot.get('available', True)
+                        }
+                        slot_data.append(slot_info)
+                    
+                    client.close()
+                    print(f"✅ Found {len(slot_data)} slots in MongoDB Atlas")
+                    
+                    response = {
+                        'success': True,
+                        'date': date_param,
+                        'slots': slot_data,
+                        'source': 'mongodb_atlas',
+                        'total_slots': len(slot_data)
+                    }
+                    
+                    self.send_json_response(response)
+                    return
+                
+                client.close()
+                print("⚠️ No slots found in MongoDB Atlas, trying JSON fallback...")
+                
+            except ImportError:
+                print("⚠️ pymongo not available, using JSON fallback...")
+            except Exception as mongo_error:
+                print(f"⚠️ MongoDB Atlas error: {mongo_error}, using JSON fallback...")
+            
+            # Fallback to JSON file (existing logic)
             db_data = load_timeslots_db()
             all_slots = db_data.get('timeslots', [])
             
@@ -238,13 +302,13 @@ class TimeSlotHandler(BaseHTTPRequestHandler):
                 
                 date_slots = new_slots
             
-            print(f"Returning {len(date_slots)} time slots")
+            print(f"Returning {len(date_slots)} time slots from JSON fallback")
             
             response = {
                 'success': True,
                 'date': date_param,
                 'slots': date_slots,
-                'source': 'json_file_mongodb_simulation',
+                'source': 'json_file_fallback',
                 'total_slots': len(date_slots)
             }
             
