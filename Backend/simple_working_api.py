@@ -43,6 +43,126 @@ def save_bookings_data(data):
         print(f"Error saving bookings: {e}")
         return False
 
+def save_patient_to_mongodb(patient_data):
+    """Save patient data to MongoDB Atlas"""
+    try:
+        from pymongo import MongoClient
+        from bson import ObjectId
+        
+        # MongoDB Atlas connection
+        mongo_uri = "mongodb+srv://clinic_admin:12345%40clinic@cluster0.1rbiryd.mongodb.net/?appName=Cluster0"
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        db = client['infinite_clinic_db']
+        patients_collection = db['patients']
+        
+        # Create patient document
+        patient_doc = {
+            '_id': ObjectId(),
+            'first_name': patient_data.get('name', ''),
+            'age': int(patient_data.get('age', 0)) if patient_data.get('age') else 0,
+            'gender': patient_data.get('gender', '').upper()[:1] if patient_data.get('gender') else 'O',
+            'phone_number': patient_data.get('phone'),
+            'email': patient_data.get('email'),
+            'prescription_file': patient_data.get('prescription_file'),
+            'prescription_filename': patient_data.get('prescription_filename'),
+            'created_at': datetime.utcnow()
+        }
+        
+        # Insert into MongoDB
+        result = patients_collection.insert_one(patient_doc)
+        client.close()
+        
+        print(f"✅ Saved patient to MongoDB: {patient_data.get('name')} (ID: {result.inserted_id})")
+        return str(result.inserted_id)
+        
+    except ImportError:
+        print("⚠️ pymongo not available - patient not saved to MongoDB")
+        return None
+    except Exception as e:
+        print(f"⚠️ Error saving patient to MongoDB: {e}")
+        return None
+
+def get_mongodb_stats():
+    """Get statistics from MongoDB Atlas"""
+    try:
+        from pymongo import MongoClient
+        
+        # MongoDB Atlas connection
+        mongo_uri = "mongodb+srv://clinic_admin:12345%40clinic@cluster0.1rbiryd.mongodb.net/?appName=Cluster0"
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        db = client['infinite_clinic_db']
+        
+        # Get collection counts
+        patients_count = db['patients'].count_documents({})
+        bookings_count = db['bookings'].count_documents({})
+        timeslots_count = db['timeslots'].count_documents({})
+        
+        # Get recent data
+        recent_patients = list(db['patients'].find().sort('created_at', -1).limit(3))
+        recent_bookings = list(db['bookings'].find().sort('created_at', -1).limit(3))
+        
+        client.close()
+        
+        return {
+            'connected': True,
+            'patients_count': patients_count,
+            'bookings_count': bookings_count,
+            'timeslots_count': timeslots_count,
+            'recent_patients': [p.get('first_name', 'Unknown') for p in recent_patients],
+            'recent_bookings': [b.get('booking_id', 'Unknown') for b in recent_bookings]
+        }
+        
+    except ImportError:
+        return {
+            'connected': False,
+            'error': 'pymongo not available'
+        }
+    except Exception as e:
+        return {
+            'connected': False,
+            'error': str(e)
+        }
+
+def save_booking_to_mongodb(booking_data):
+    """Save booking data to MongoDB Atlas"""
+    try:
+        from pymongo import MongoClient
+        from bson import ObjectId
+        
+        # MongoDB Atlas connection
+        mongo_uri = "mongodb+srv://clinic_admin:12345%40clinic@cluster0.1rbiryd.mongodb.net/?appName=Cluster0"
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        db = client['infinite_clinic_db']
+        bookings_collection = db['bookings']
+        
+        # Create booking document
+        booking_doc = {
+            '_id': ObjectId(),
+            'booking_id': booking_data['booking_id'],
+            'patient_ids': booking_data.get('patient_ids', []),
+            'tests': booking_data.get('tests', []),
+            'total_amount': booking_data.get('total_amount', 0),
+            'booking_date': datetime.strptime(booking_data['booking_date'], '%Y-%m-%d').date() if isinstance(booking_data['booking_date'], str) else booking_data['booking_date'],
+            'time_slot_id': booking_data.get('time_slot_id'),
+            'preferred_time': booking_data.get('preferred_time'),
+            'status': 'confirmed',
+            'created_at': datetime.utcnow()
+        }
+        
+        # Insert into MongoDB
+        result = bookings_collection.insert_one(booking_doc)
+        client.close()
+        
+        print(f"✅ Saved booking to MongoDB: {booking_data['booking_id']} (ID: {result.inserted_id})")
+        return str(result.inserted_id)
+        
+    except ImportError:
+        print("⚠️ pymongo not available - booking not saved to MongoDB")
+        return None
+    except Exception as e:
+        print(f"⚠️ Error saving booking to MongoDB: {e}")
+        return None
+
 class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
     """Simple handler with booking tracking"""
     
@@ -128,16 +248,20 @@ class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
                 bookings_data = load_bookings_data()
                 total_bookings = sum(bookings_data['bookings'].values())
                 
+                # Get MongoDB statistics
+                mongodb_stats = get_mongodb_stats()
+                
                 self.send_json_response({
                     'success': True,
-                    'message': 'Simple Time Slots API Working with Booking Tracking',
+                    'message': 'Simple Time Slots API with MongoDB Storage',
                     'timestamp': datetime.utcnow().isoformat(),
-                    'stats': {
-                        'total_bookings': total_bookings,
+                    'time_slot_stats': {
+                        'total_slot_bookings': total_bookings,
                         'unique_slots_booked': len(bookings_data['bookings']),
                         'booking_history_count': len(bookings_data['booking_history'])
                     },
-                    'note': 'This version tracks bookings and reduces availability'
+                    'mongodb_stats': mongodb_stats,
+                    'note': 'Patient details and bookings stored in MongoDB Atlas'
                 })
                 
             elif path in ['/api/mongo/time-slots/', '/api/mongo/simple-time-slots/']:
@@ -182,7 +306,7 @@ class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
             self.send_json_response({'error': str(e)}, 500)
     
     def do_POST(self):
-        """Handle POST requests with booking tracking"""
+        """Handle POST requests with MongoDB storage"""
         try:
             url_parts = urllib.parse.urlparse(self.path)
             path = url_parts.path
@@ -203,10 +327,47 @@ class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
                 booking_id = f"BK{int(datetime.utcnow().timestamp())}"
                 time_slot_id = request_data.get('time_slot_id')
                 
-                # Load bookings data
+                # Load bookings data for time slot tracking only
                 bookings_data = load_bookings_data()
                 
-                # Track the booking if time slot is provided
+                # Process patient data and save to MongoDB
+                patient_ids = []
+                cart_items = request_data.get('cart_items', [])
+                
+                print(f"📋 Processing {len(cart_items)} cart items...")
+                
+                for cart_item in cart_items:
+                    test_name = cart_item.get('name', '')
+                    patients = cart_item.get('patients', [])
+                    
+                    print(f"🧪 Test: {test_name}, Patients: {len(patients)}")
+                    
+                    for patient_data in patients:
+                        if not patient_data.get('name') or not patient_data.get('age'):
+                            print(f"⏭️ Skipping incomplete patient: {patient_data}")
+                            continue
+                        
+                        # Save patient to MongoDB Atlas
+                        patient_id = save_patient_to_mongodb(patient_data)
+                        if patient_id:
+                            patient_ids.append(patient_id)
+                
+                # Prepare booking data for MongoDB
+                booking_data = {
+                    'booking_id': booking_id,
+                    'patient_ids': patient_ids,
+                    'tests': [item.get('name') for item in cart_items],
+                    'total_amount': request_data.get('total_price', 0),
+                    'booking_date': request_data.get('booking_date', date.today().isoformat()),
+                    'time_slot_id': time_slot_id,
+                    'preferred_time': request_data.get('preferred_time')
+                }
+                
+                # Save booking to MongoDB Atlas
+                booking_mongo_id = save_booking_to_mongodb(booking_data)
+                
+                # Track the time slot booking (for availability)
+                new_available = 'N/A'
                 if time_slot_id and time_slot_id.startswith('simple_'):
                     # Get current booked count
                     current_booked = bookings_data['bookings'].get(time_slot_id, 0)
@@ -221,27 +382,28 @@ class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
                         }, 400)
                         return
                     
-                    # Update booking count
+                    # Update booking count (only for time slot tracking)
                     bookings_data['bookings'][time_slot_id] = current_booked + 1
                     
-                    # Add to booking history
+                    # Add to booking history (minimal data for time slot tracking)
                     booking_record = {
                         'booking_id': booking_id,
                         'time_slot_id': time_slot_id,
                         'booking_date': request_data.get('booking_date', date.today().isoformat()),
-                        'total_amount': request_data.get('total_price', 0),
-                        'cart_items': request_data.get('cart_items', []),
-                        'booked_at': datetime.utcnow().isoformat()
+                        'booked_at': datetime.utcnow().isoformat(),
+                        'mongodb_booking_id': booking_mongo_id
                     }
                     bookings_data['booking_history'].append(booking_record)
                     
-                    # Save updated bookings data
+                    # Save updated bookings data (only for time slot availability)
                     save_bookings_data(bookings_data)
                     
                     # Calculate new availability
                     new_available = max(0, 10 - (current_booked + 1))
                     
                     print(f"✅ Booked slot {time_slot_id}: {current_booked + 1}/10 booked, {new_available} available")
+                
+                print(f"✅ Booking complete: {len(patient_ids)} patients saved to MongoDB")
                 
                 self.send_json_response({
                     'success': True,
@@ -252,9 +414,15 @@ class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
                     'time_slot_info': {
                         'id': time_slot_id,
                         'time': request_data.get('preferred_time', 'Selected time slot'),
-                        'new_available_slots': new_available if time_slot_id and time_slot_id.startswith('simple_') else 'N/A'
+                        'new_available_slots': new_available
                     },
-                    'note': 'Booking tracked - availability updated in real-time'
+                    'mongodb_data': {
+                        'patients_saved': len(patient_ids),
+                        'booking_saved': booking_mongo_id is not None,
+                        'patient_ids': patient_ids,
+                        'booking_mongo_id': booking_mongo_id
+                    },
+                    'note': 'Patient details and booking data saved to MongoDB Atlas'
                 })
                 
             else:

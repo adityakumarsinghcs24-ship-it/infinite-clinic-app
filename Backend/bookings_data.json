@@ -1,6 +1,6 @@
 {
   "bookings": {
-    "simple_2026-01-02_0": 1
+    "simple_2026-01-02_0": 2
   },
   "booking_history": [
     {
@@ -15,11 +15,18 @@
         }
       ],
       "booked_at": "2026-01-02T13:32:36.923266"
+    },
+    {
+      "booking_id": "BK1767341782",
+      "time_slot_id": "simple_2026-01-02_0",
+      "booking_date": "2026-01-02",
+      "booked_at": "2026-01-02T13:46:22.294895",
+      "mongodb_booking_id": null
     }
   ],
   "metadata": {
     "created_at": "2026-01-02T13:32:36.923266",
     "version": "1.0",
-    "last_updated": "2026-01-02T13:32:36.923266"
+    "last_updated": "2026-01-02T13:46:22.294895"
   }
 }
