@@ -366,8 +366,15 @@ def time_slots(request):
             else:
                 target_date = date.today()
             
-            # Get available time slots for the date
-            slots = TimeSlot.objects.filter(date=target_date, available=True).order_by('start_time')
+            # Check if we have any time slots for this date
+            slots = TimeSlot.objects.filter(date=target_date).order_by('start_time')
+            
+            # If no slots exist, create default ones
+            if not slots.exists():
+                create_default_time_slots(target_date)
+                slots = TimeSlot.objects.filter(date=target_date, available=True).order_by('start_time')
+            else:
+                slots = slots.filter(available=True)
             
             slot_data = []
             for slot in slots:
@@ -390,6 +397,9 @@ def time_slots(request):
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
+            print(f"Time slots error: {str(e)}")  # Debug log
+            import traceback
+            traceback.print_exc()
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     elif request.method == 'POST':
@@ -417,3 +427,85 @@ def time_slots(request):
             
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def create_default_time_slots(target_date):
+    """Create default time slots for a specific date"""
+    try:
+        # Skip Sundays
+        if target_date.weekday() == 6:
+            return
+        
+        # Define time slots (24-hour format)
+        time_slots = [
+            ('08:00', '09:00'),
+            ('09:00', '10:00'),
+            ('10:00', '11:00'),
+            ('11:00', '12:00'),
+            ('14:00', '15:00'),  # 2 PM - 3 PM
+            ('15:00', '16:00'),  # 3 PM - 4 PM
+            ('16:00', '17:00'),  # 4 PM - 5 PM
+            ('17:00', '18:00'),  # 5 PM - 6 PM
+        ]
+        
+        for start_time_str, end_time_str in time_slots:
+            # Create datetime objects
+            start_datetime = datetime.combine(target_date, datetime.strptime(start_time_str, '%H:%M').time())
+            end_datetime = datetime.combine(target_date, datetime.strptime(end_time_str, '%H:%M').time())
+            
+            # Check if slot already exists
+            existing_slot = TimeSlot.objects.filter(
+                date=target_date,
+                start_time=start_datetime,
+                end_time=end_datetime
+            ).first()
+            
+            if not existing_slot:
+                # Create new time slot
+                time_slot = TimeSlot(
+                    date=target_date,
+                    start_time=start_datetime,
+                    end_time=end_datetime,
+                    max_patients=10,  # Allow up to 10 patients per slot
+                    unlimited_patients=False,
+                    available_slots=10,
+                    booked_slots=0,
+                    available=True
+                )
+                time_slot.save()
+                print(f"Created slot: {target_date} {start_time_str}-{end_time_str}")
+    
+    except Exception as e:
+        print(f"Error creating default time slots: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+# Utility endpoint to create time slots for multiple days
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_time_slots_for_days(request):
+    """Create time slots for the next N days"""
+    try:
+        days = request.data.get('days', 30)  # Default 30 days
+        start_date = date.today()
+        created_count = 0
+        
+        for i in range(days):
+            current_date = start_date + timedelta(days=i)
+            # Skip past dates
+            if current_date < start_date:
+                continue
+                
+            create_default_time_slots(current_date)
+            created_count += 1
+        
+        return Response({
+            'success': True,
+            'message': f'Time slots created for {created_count} days',
+            'start_date': start_date.isoformat(),
+            'days_created': created_count
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

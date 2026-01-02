@@ -30,4 +30,7 @@ urlpatterns = [
     
     # Time Slots
     path('time-slots/', mongo_views.time_slots, name='time-slots'),
+    
+    # Create default time slots (utility endpoint)
+    path('create-time-slots/', mongo_views.create_time_slots_for_days, name='create-time-slots'),
 ]

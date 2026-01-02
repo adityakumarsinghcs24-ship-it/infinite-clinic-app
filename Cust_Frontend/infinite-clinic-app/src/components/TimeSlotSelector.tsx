@@ -65,25 +65,39 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
     setIsLoading(true);
     try {
       const response = await fetch(`${API_ENDPOINTS.TIME_SLOTS}?date=${date}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
       
-      if (response.ok) {
-        setTimeSlots(data.slots || []);
-      } else {
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      setTimeSlots(data.slots || []);
+      
+      // If no slots available, show info message
+      if (!data.slots || data.slots.length === 0) {
         toast({
-          title: 'Error loading time slots',
-          description: data.error || 'Please try again',
-          status: 'error',
-          duration: 3000,
+          title: 'No time slots available',
+          description: 'Please select a different date or use custom time option',
+          status: 'info',
+          duration: 4000,
         });
       }
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error('Error fetching time slots:', error);
+      setTimeSlots([]);
+      
+      // Show user-friendly error message
       toast({
-        title: 'Error loading time slots',
-        description: 'Please check your connection',
-        status: 'error',
-        duration: 3000,
+        title: 'Unable to load time slots',
+        description: 'You can still specify your preferred time below',
+        status: 'warning',
+        duration: 5000,
       });
     } finally {
       setIsLoading(false);
@@ -189,9 +203,14 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
                   ))}
                 </SimpleGrid>
               ) : (
-                <Text color="gray.500" textAlign="center" py={4}>
-                  No time slots available for this date
-                </Text>
+                <Box textAlign="center" py={6} bg="gray.50" borderRadius="md">
+                  <Text color="gray.600" mb={2}>
+                    No time slots available for this date
+                  </Text>
+                  <Text fontSize="sm" color="gray.500">
+                    Please select a different date or specify your preferred time below
+                  </Text>
+                </Box>
               )}
             </Box>
 
