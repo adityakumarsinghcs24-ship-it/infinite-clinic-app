@@ -13,11 +13,20 @@ ALLOWED_HOSTS = [
     '.onrender.com',
 ]
 
+# Add environment-based allowed hosts
+env_allowed_hosts = os.environ.get('ALLOWED_HOSTS', '')
+if env_allowed_hosts:
+    ALLOWED_HOSTS.extend([host.strip() for host in env_allowed_hosts.split(',')])
 
 # CORS settings for production
 CORS_ALLOWED_ORIGINS = [
     "https://infinite-clinic-app.vercel.app",
 ]
+
+# Add environment-based CORS origins
+env_cors_origins = os.environ.get('CORS_ORIGINS', '')
+if env_cors_origins:
+    CORS_ALLOWED_ORIGINS.extend([origin.strip() for origin in env_cors_origins.split(',')])
 
 CORS_ALLOW_ALL_ORIGINS = False  # Disable in production
 CORS_ALLOW_CREDENTIALS = True
@@ -26,6 +35,9 @@ CSRF_TRUSTED_ORIGINS = [
     "https://infinite-clinic-app.vercel.app",
 ]
 
+# Add environment-based CSRF trusted origins
+if env_cors_origins:
+    CSRF_TRUSTED_ORIGINS.extend([origin.strip() for origin in env_cors_origins.split(',')])
 
 # Security settings for production
 SECURE_BROWSER_XSS_FILTER = True
@@ -53,7 +65,16 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MONGODB_SETTINGS = {
     'db': os.environ.get('MONGO_DB_NAME', 'infinite_clinic_prod'),
     'host': os.environ.get('MONGO_URI', 'mongodb://localhost:27017'),
+    'maxPoolSize': 50,
+    'minPoolSize': 5,
+    'maxIdleTimeMS': 30000,
+    'serverSelectionTimeoutMS': 5000,
+    'socketTimeoutMS': 20000,
+    'connectTimeoutMS': 10000,
 }
+
+# Time Slots Configuration
+ENABLE_TIME_SLOTS_AUTO_CREATION = os.environ.get('ENABLE_TIME_SLOTS_AUTO_CREATION', 'True').lower() == 'true'
 
 # Logging for production
 LOGGING = {
@@ -66,6 +87,11 @@ LOGGING = {
     },
     "loggers": {
         "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "app": {
             "handlers": ["console"],
             "level": "INFO",
             "propagate": True,

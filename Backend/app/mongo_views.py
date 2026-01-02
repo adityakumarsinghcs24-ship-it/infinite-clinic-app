@@ -55,6 +55,21 @@ def serialize_test(test):
         'created_at': test.created_at.isoformat() if test.created_at else None
     }
 
+def serialize_time_slot(time_slot):
+    """Convert TimeSlot document to dict"""
+    return {
+        'id': str(time_slot.id),
+        'date': time_slot.date.isoformat(),
+        'start_time': time_slot.start_time.strftime('%H:%M'),
+        'end_time': time_slot.end_time.strftime('%H:%M'),
+        'display_time': f"{time_slot.start_time.strftime('%H:%M')} - {time_slot.end_time.strftime('%H:%M')}",
+        'available_slots': time_slot.available_slots,
+        'booked_slots': time_slot.booked_slots,
+        'unlimited_patients': time_slot.unlimited_patients,
+        'available': time_slot.available,
+        'created_at': time_slot.created_at.isoformat() if time_slot.created_at else None
+    }
+
 # Patient API Views
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
@@ -350,10 +365,11 @@ def book_test_with_patients(request):
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-# Time Slots API
+# Time Slots API (Pure MongoDB - Similar to Patient API)
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
-def time_slots(request):
+def time_slots_list_create(request):
+    """Time slots API - Pure MongoDB storage (like patient API)"""
     if request.method == 'GET':
         try:
             # Get date parameter (default to today)
@@ -366,94 +382,109 @@ def time_slots(request):
             else:
                 target_date = date.today()
             
-            # Check if we have any time slots for this date
-            slots = TimeSlot.objects.filter(date=target_date).order_by('start_time')
+            print(f"Fetching time slots from MongoDB for date: {target_date}")
             
-            # If no slots exist, create default ones
+            # Get time slots from MongoDB (like getting patients)
+            slots = TimeSlot.objects.filter(date=target_date, available=True).order_by('start_time')
+            print(f"Found {slots.count()} slots in MongoDB for {target_date}")
+            
+            # If no slots exist, create default ones in MongoDB
             if not slots.exists():
-                create_default_time_slots(target_date)
+                print(f"No slots found in MongoDB, creating default slots for {target_date}")
+                created_count = create_default_time_slots_in_mongodb(target_date)
+                print(f"Created {created_count} slots in MongoDB")
+                # Fetch the newly created slots
                 slots = TimeSlot.objects.filter(date=target_date, available=True).order_by('start_time')
-            else:
-                slots = slots.filter(available=True)
             
-            slot_data = []
-            for slot in slots:
-                slot_info = {
-                    'id': str(slot.id),
-                    'date': slot.date.isoformat(),
-                    'start_time': slot.start_time.strftime('%H:%M'),
-                    'end_time': slot.end_time.strftime('%H:%M'),
-                    'display_time': f"{slot.start_time.strftime('%H:%M')} - {slot.end_time.strftime('%H:%M')}",
-                    'available_slots': slot.available_slots,
-                    'booked_slots': slot.booked_slots,
-                    'unlimited_patients': slot.unlimited_patients,
-                    'available': slot.available
-                }
-                slot_data.append(slot_info)
+            # Serialize the slots (like serializing patients)
+            slot_data = [serialize_time_slot(slot) for slot in slots]
+            
+            print(f"Returning {len(slot_data)} time slots from MongoDB")
             
             return Response({
+                'success': True,
                 'date': target_date.isoformat(),
-                'slots': slot_data
+                'slots': slot_data,
+                'source': 'mongodb',
+                'total_slots': len(slot_data)
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
-            print(f"Time slots error: {str(e)}")  # Debug log
+            print(f"MongoDB time slots error: {str(e)}")
             import traceback
             traceback.print_exc()
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({
+                'success': False,
+                'error': f'MongoDB error: {str(e)}',
+                'date': target_date.isoformat() if 'target_date' in locals() else date.today().isoformat(),
+                'slots': []
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     elif request.method == 'POST':
         try:
-            # Create new time slot (admin functionality)
+            # Create new time slot in MongoDB (like creating a patient)
             data = request.data
             
             slot_date = datetime.strptime(data.get('date'), '%Y-%m-%d').date()
             start_time = datetime.strptime(f"{data.get('date')} {data.get('start_time')}", '%Y-%m-%d %H:%M')
             end_time = datetime.strptime(f"{data.get('date')} {data.get('end_time')}", '%Y-%m-%d %H:%M')
             
+            # Create and save to MongoDB (like saving a patient)
             time_slot = TimeSlot(
                 date=slot_date,
                 start_time=start_time,
                 end_time=end_time,
-                max_patients=data.get('max_patients'),
-                unlimited_patients=data.get('unlimited_patients', True)
+                max_patients=data.get('max_patients', 10),
+                unlimited_patients=data.get('unlimited_patients', False),
+                available_slots=data.get('max_patients', 10),
+                booked_slots=0,
+                available=True
             )
             time_slot.save()
             
+            print(f"Created time slot in MongoDB: {slot_date} {start_time.strftime('%H:%M')}-{end_time.strftime('%H:%M')}")
+            
             return Response({
-                'id': str(time_slot.id),
-                'message': 'Time slot created successfully'
+                'success': True,
+                'time_slot': serialize_time_slot(time_slot),
+                'message': 'Time slot created successfully in MongoDB'
             }, status=status.HTTP_201_CREATED)
             
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            print(f"Error creating time slot in MongoDB: {str(e)}")
+            return Response({
+                'success': False,
+                'error': f'MongoDB creation error: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
-def create_default_time_slots(target_date):
-    """Create default time slots for a specific date"""
+def create_default_time_slots_in_mongodb(target_date):
+    """Create default time slots in MongoDB (like creating patients)"""
     try:
         # Skip Sundays
         if target_date.weekday() == 6:
-            return
+            print(f"Skipping Sunday: {target_date}")
+            return 0
         
-        # Define time slots (24-hour format)
+        # Define time slots
         time_slots = [
             ('08:00', '09:00'),
             ('09:00', '10:00'),
             ('10:00', '11:00'),
             ('11:00', '12:00'),
-            ('14:00', '15:00'),  # 2 PM - 3 PM
-            ('15:00', '16:00'),  # 3 PM - 4 PM
-            ('16:00', '17:00'),  # 4 PM - 5 PM
-            ('17:00', '18:00'),  # 5 PM - 6 PM
+            ('14:00', '15:00'),
+            ('15:00', '16:00'),
+            ('16:00', '17:00'),
+            ('17:00', '18:00'),
         ]
         
+        created_count = 0
         for start_time_str, end_time_str in time_slots:
             # Create datetime objects
             start_datetime = datetime.combine(target_date, datetime.strptime(start_time_str, '%H:%M').time())
             end_datetime = datetime.combine(target_date, datetime.strptime(end_time_str, '%H:%M').time())
             
-            # Check if slot already exists
+            # Check if slot already exists in MongoDB
             existing_slot = TimeSlot.objects.filter(
                 date=target_date,
                 start_time=start_datetime,
@@ -461,51 +492,187 @@ def create_default_time_slots(target_date):
             ).first()
             
             if not existing_slot:
-                # Create new time slot
+                # Create and save to MongoDB (like creating a patient)
                 time_slot = TimeSlot(
                     date=target_date,
                     start_time=start_datetime,
                     end_time=end_datetime,
-                    max_patients=10,  # Allow up to 10 patients per slot
+                    max_patients=10,
                     unlimited_patients=False,
                     available_slots=10,
                     booked_slots=0,
                     available=True
                 )
                 time_slot.save()
-                print(f"Created slot: {target_date} {start_time_str}-{end_time_str}")
+                created_count += 1
+                print(f"Created in MongoDB: {target_date} {start_time_str}-{end_time_str}")
+        
+        return created_count
     
     except Exception as e:
-        print(f"Error creating default time slots: {e}")
+        print(f"Error creating time slots in MongoDB: {e}")
         import traceback
         traceback.print_exc()
+        return 0
 
 
-# Utility endpoint to create time slots for multiple days
+# Legacy function aliases (for backward compatibility)
+def create_default_time_slots(target_date):
+    """Legacy function - redirects to MongoDB version"""
+    return create_default_time_slots_in_mongodb(target_date)
+
+
+# Test API endpoint (MongoDB focused)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def test_api(request):
+    """Test API endpoint - MongoDB focused (like patient system)"""
+    try:
+        # Test MongoDB connection (like testing patient system)
+        mongodb_status = {
+            'connected': False,
+            'error': None,
+            'collections_count': 0,
+            'time_slots_count': 0,
+            'patients_count': 0
+        }
+        
+        try:
+            # Test basic connection
+            from mongoengine.connection import get_db
+            db = get_db()
+            collections = db.list_collection_names()
+            mongodb_status['connected'] = True
+            mongodb_status['collections_count'] = len(collections)
+            
+            # Test TimeSlot model (like testing Patient model)
+            time_slots_count = TimeSlot.objects.count()
+            mongodb_status['time_slots_count'] = time_slots_count
+            
+            # Test Patient model for comparison
+            patients_count = Patient.objects.count()
+            mongodb_status['patients_count'] = patients_count
+            
+        except Exception as mongo_error:
+            mongodb_status['error'] = str(mongo_error)
+        
+        return Response({
+            'success': True,
+            'message': 'API is working - MongoDB focused',
+            'timestamp': datetime.utcnow().isoformat(),
+            'mongodb_status': mongodb_status,
+            'endpoints': {
+                'time_slots': '/api/mongo/time-slots/',
+                'simple_time_slots': '/api/mongo/simple-time-slots/',
+                'create_time_slots': '/api/mongo/create-time-slots/',
+                'test': '/api/mongo/test/',
+                'patients': '/api/mongo/patients/'
+            },
+            'note': 'Time slots are stored in MongoDB only (like patients)'
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': str(e),
+            'timestamp': datetime.utcnow().isoformat()
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def create_time_slots_for_days(request):
-    """Create time slots for the next N days"""
+    """Create time slots for multiple days in MongoDB (like bulk patient creation)"""
     try:
+        print("Creating time slots in MongoDB for multiple days...")
+        
         days = request.data.get('days', 30)  # Default 30 days
         start_date = date.today()
         created_count = 0
+        total_slots = 0
         
         for i in range(days):
             current_date = start_date + timedelta(days=i)
             # Skip past dates
             if current_date < start_date:
                 continue
-                
-            create_default_time_slots(current_date)
-            created_count += 1
+            
+            slots_created = create_default_time_slots_in_mongodb(current_date)
+            if slots_created > 0:
+                created_count += 1
+                total_slots += slots_created
         
         return Response({
             'success': True,
-            'message': f'Time slots created for {created_count} days',
+            'message': f'Time slots created in MongoDB for {created_count} days',
             'start_date': start_date.isoformat(),
-            'days_created': created_count
+            'days_processed': days,
+            'days_with_slots_created': created_count,
+            'total_slots_created': total_slots,
+            'source': 'mongodb'
         }, status=status.HTTP_201_CREATED)
         
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        print(f"Error in bulk time slot creation (MongoDB): {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return Response({
+            'success': False,
+            'error': f'MongoDB bulk creation error: {str(e)}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Simple time slots endpoint (fallback)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def simple_time_slots(request):
+    """Simple time slots endpoint - MongoDB only (like patient API)"""
+    try:
+        date_str = request.GET.get('date', date.today().isoformat())
+        
+        # Parse the date
+        try:
+            target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            target_date = date.today()
+        
+        print(f"Simple time slots - fetching from MongoDB for: {target_date}")
+        
+        # Get from MongoDB only (like getting patients)
+        slots = TimeSlot.objects.filter(date=target_date, available=True).order_by('start_time')
+        
+        # If no slots exist, create them in MongoDB
+        if not slots.exists():
+            print(f"No slots in MongoDB, creating for: {target_date}")
+            created_count = create_default_time_slots_in_mongodb(target_date)
+            print(f"Created {created_count} slots in MongoDB")
+            slots = TimeSlot.objects.filter(date=target_date, available=True).order_by('start_time')
+        
+        # Serialize from MongoDB (like serializing patients)
+        slot_data = [serialize_time_slot(slot) for slot in slots]
+        
+        return Response({
+            'success': True,
+            'date': target_date.isoformat(),
+            'slots': slot_data,
+            'source': 'mongodb_simple',
+            'total_slots': len(slot_data)
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        print(f"Error in simple time slots (MongoDB): {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return Response({
+            'success': False,
+            'error': f'MongoDB error: {str(e)}',
+            'date': target_date.isoformat() if 'target_date' in locals() else date.today().isoformat(),
+            'slots': []
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    except Exception as e:
+        print(f"Error in simple time slots: {str(e)}")
+        return Response({
+            'success': False,
+            'error': str(e),
+            'date': date.today().isoformat(),
+            'slots': [],
+            'source': 'error'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -28,8 +28,12 @@ urlpatterns = [
     # Test Booking
     path('book-test/', mongo_views.book_test_with_patients, name='book-test'),
     
-    # Time Slots
-    path('time-slots/', mongo_views.time_slots, name='time-slots'),
+    # Time Slots (Similar to Patient API)
+    path('time-slots/', mongo_views.time_slots_list_create, name='time-slots-list-create'),
+    path('simple-time-slots/', mongo_views.simple_time_slots, name='simple-time-slots'),
+    
+    # Test API endpoint
+    path('test/', mongo_views.test_api, name='test-api'),
     
     # Create default time slots (utility endpoint)
     path('create-time-slots/', mongo_views.create_time_slots_for_days, name='create-time-slots'),

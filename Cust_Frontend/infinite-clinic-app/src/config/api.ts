@@ -17,6 +17,10 @@ export const API_ENDPOINTS = {
   
   // Time Slots
   TIME_SLOTS: `${API_BASE_URL}/mongo/time-slots/`,
+  SIMPLE_TIME_SLOTS: `${API_BASE_URL}/mongo/simple-time-slots/`,
+  
+  // Test API
+  TEST_API: `${API_BASE_URL}/mongo/test/`,
   
   // Dashboard
   DASHBOARD_STATS: `${API_BASE_URL}/mongo/dashboard/stats/`,

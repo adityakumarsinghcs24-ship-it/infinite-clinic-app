@@ -64,7 +64,13 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
   const fetchTimeSlots = async (date: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_ENDPOINTS.TIME_SLOTS}?date=${date}`);
+      // First try the simple endpoint to test backend connectivity
+      let response = await fetch(`${API_ENDPOINTS.SIMPLE_TIME_SLOTS}?date=${date}`);
+      
+      if (!response.ok) {
+        // If simple endpoint fails, try the main endpoint
+        response = await fetch(`${API_ENDPOINTS.TIME_SLOTS}?date=${date}`);
+      }
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -78,8 +84,16 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
       
       setTimeSlots(data.slots || []);
       
-      // If no slots available, show info message
-      if (!data.slots || data.slots.length === 0) {
+      // Show success message if we got slots
+      if (data.slots && data.slots.length > 0) {
+        const source = data.source === 'simple_backend' ? 'backend (simple)' : 'backend (full)';
+        toast({
+          title: 'Time slots loaded',
+          description: `Loaded ${data.slots.length} slots from ${source}`,
+          status: 'success',
+          duration: 3000,
+        });
+      } else {
         toast({
           title: 'No time slots available',
           description: 'Please select a different date or use custom time option',
@@ -147,6 +161,40 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
       unlimited_patients: false,
       available: true
     }));
+  };
+
+  const testBackendConnection = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(API_ENDPOINTS.TEST_API);
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        toast({
+          title: 'Backend Connected',
+          description: 'API is working correctly',
+          status: 'success',
+          duration: 3000,
+        });
+        
+        // Try to fetch time slots again
+        setTimeout(() => {
+          fetchTimeSlots(selectedDate);
+        }, 1000);
+      } else {
+        throw new Error(data.error || 'Backend test failed');
+      }
+    } catch (error: any) {
+      console.error('Backend test error:', error);
+      toast({
+        title: 'Backend Connection Failed',
+        description: error.message || 'Cannot connect to backend',
+        status: 'error',
+        duration: 5000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const tryCreateTimeSlots = async (date: string) => {
@@ -303,15 +351,27 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
                     </Text>
                   </Box>
                   
-                  <Button
-                    size="sm"
-                    colorScheme="blue"
-                    variant="outline"
-                    onClick={() => tryCreateTimeSlots(selectedDate)}
-                    isLoading={isLoading}
-                  >
-                    Try to Create Time Slots
-                  </Button>
+                  <HStack spacing={2}>
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      variant="outline"
+                      onClick={() => tryCreateTimeSlots(selectedDate)}
+                      isLoading={isLoading}
+                    >
+                      Try to Create Time Slots
+                    </Button>
+                    
+                    <Button
+                      size="sm"
+                      colorScheme="green"
+                      variant="outline"
+                      onClick={() => testBackendConnection()}
+                      isLoading={isLoading}
+                    >
+                      Test Backend
+                    </Button>
+                  </HStack>
                 </VStack>
               )}
             </Box>

@@ -1,0 +1,201 @@
+{
+  "timeslots": [
+    {
+      "id": "slot_2026-01-03_0",
+      "date": "2026-01-03",
+      "start_time": "08:00",
+      "end_time": "09:00",
+      "display_time": "08:00 - 09:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:12:11.635803"
+    },
+    {
+      "id": "slot_2026-01-03_1",
+      "date": "2026-01-03",
+      "start_time": "09:00",
+      "end_time": "10:00",
+      "display_time": "09:00 - 10:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:12:11.635803"
+    },
+    {
+      "id": "slot_2026-01-03_2",
+      "date": "2026-01-03",
+      "start_time": "10:00",
+      "end_time": "11:00",
+      "display_time": "10:00 - 11:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:12:11.635803"
+    },
+    {
+      "id": "slot_2026-01-03_3",
+      "date": "2026-01-03",
+      "start_time": "11:00",
+      "end_time": "12:00",
+      "display_time": "11:00 - 12:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:12:11.635803"
+    },
+    {
+      "id": "slot_2026-01-03_4",
+      "date": "2026-01-03",
+      "start_time": "14:00",
+      "end_time": "15:00",
+      "display_time": "14:00 - 15:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:12:11.635803"
+    },
+    {
+      "id": "slot_2026-01-03_5",
+      "date": "2026-01-03",
+      "start_time": "15:00",
+      "end_time": "16:00",
+      "display_time": "15:00 - 16:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:12:11.635803"
+    },
+    {
+      "id": "slot_2026-01-03_6",
+      "date": "2026-01-03",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "display_time": "16:00 - 17:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:12:11.635803"
+    },
+    {
+      "id": "slot_2026-01-03_7",
+      "date": "2026-01-03",
+      "start_time": "17:00",
+      "end_time": "18:00",
+      "display_time": "17:00 - 18:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:12:11.635803"
+    },
+    {
+      "id": "slot_2026-01-02_0",
+      "date": "2026-01-02",
+      "start_time": "08:00",
+      "end_time": "09:00",
+      "display_time": "08:00 - 09:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:13:48.150000"
+    },
+    {
+      "id": "slot_2026-01-02_1",
+      "date": "2026-01-02",
+      "start_time": "09:00",
+      "end_time": "10:00",
+      "display_time": "09:00 - 10:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:13:48.150000"
+    },
+    {
+      "id": "slot_2026-01-02_2",
+      "date": "2026-01-02",
+      "start_time": "10:00",
+      "end_time": "11:00",
+      "display_time": "10:00 - 11:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:13:48.150000"
+    },
+    {
+      "id": "slot_2026-01-02_3",
+      "date": "2026-01-02",
+      "start_time": "11:00",
+      "end_time": "12:00",
+      "display_time": "11:00 - 12:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:13:48.150000"
+    },
+    {
+      "id": "slot_2026-01-02_4",
+      "date": "2026-01-02",
+      "start_time": "14:00",
+      "end_time": "15:00",
+      "display_time": "14:00 - 15:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:13:48.150000"
+    },
+    {
+      "id": "slot_2026-01-02_5",
+      "date": "2026-01-02",
+      "start_time": "15:00",
+      "end_time": "16:00",
+      "display_time": "15:00 - 16:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:13:48.150000"
+    },
+    {
+      "id": "slot_2026-01-02_6",
+      "date": "2026-01-02",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "display_time": "16:00 - 17:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:13:48.150000"
+    },
+    {
+      "id": "slot_2026-01-02_7",
+      "date": "2026-01-02",
+      "start_time": "17:00",
+      "end_time": "18:00",
+      "display_time": "17:00 - 18:00",
+      "available_slots": 10,
+      "booked_slots": 0,
+      "unlimited_patients": false,
+      "available": true,
+      "created_at": "2026-01-02T12:13:48.150000"
+    }
+  ],
+  "metadata": {
+    "created_at": "2026-01-02T00:00:00Z",
+    "last_updated": "2026-01-02T12:13:48.150000",
+    "version": "1.0"
+  }
+}

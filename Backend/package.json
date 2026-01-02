@@ -1,0 +1,17 @@
+{
+  "name": "infinite-clinic-simple-api",
+  "version": "1.0.0",
+  "description": "Simple Express.js API server for Infinite Clinic time slots",
+  "main": "simple_api_server.js",
+  "scripts": {
+    "start": "node simple_api_server.js",
+    "dev": "node simple_api_server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "keywords": ["api", "express", "time-slots", "clinic"],
+  "author": "Infinite Clinic",
+  "license": "MIT"
+}
