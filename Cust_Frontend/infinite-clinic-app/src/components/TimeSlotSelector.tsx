@@ -90,14 +90,104 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
       
     } catch (error: any) {
       console.error('Error fetching time slots:', error);
-      setTimeSlots([]);
       
-      // Show user-friendly error message
+      // Fallback: Create default time slots on frontend
+      const fallbackSlots = createFallbackTimeSlots(date);
+      setTimeSlots(fallbackSlots);
+      
+      if (fallbackSlots.length > 0) {
+        toast({
+          title: 'Using default time slots',
+          description: 'Backend unavailable, showing standard appointment times',
+          status: 'info',
+          duration: 4000,
+        });
+      } else {
+        toast({
+          title: 'Unable to load time slots',
+          description: 'You can still specify your preferred time below',
+          status: 'warning',
+          duration: 5000,
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const createFallbackTimeSlots = (date: string): TimeSlot[] => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    
+    // Don't show slots for past dates or Sundays
+    if (selectedDate < today || selectedDate.getDay() === 0) {
+      return [];
+    }
+    
+    // Create default time slots
+    const timeSlots = [
+      { start: '08:00', end: '09:00' },
+      { start: '09:00', end: '10:00' },
+      { start: '10:00', end: '11:00' },
+      { start: '11:00', end: '12:00' },
+      { start: '14:00', end: '15:00' },
+      { start: '15:00', end: '16:00' },
+      { start: '16:00', end: '17:00' },
+      { start: '17:00', end: '18:00' },
+    ];
+    
+    return timeSlots.map((slot, index) => ({
+      id: `fallback_${date}_${index}`,
+      date: date,
+      start_time: slot.start,
+      end_time: slot.end,
+      display_time: `${slot.start} - ${slot.end}`,
+      available_slots: 10,
+      booked_slots: 0,
+      unlimited_patients: false,
+      available: true
+    }));
+  };
+
+  const tryCreateTimeSlots = async (date: string) => {
+    setIsLoading(true);
+    try {
+      const createUrl = API_ENDPOINTS.TIME_SLOTS.replace('/time-slots/', '/create-time-slots/');
+      const response = await fetch(createUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ days: 7 })
+      });
+      
+      if (response.ok) {
+        toast({
+          title: 'Time slots created',
+          description: 'Refreshing available slots...',
+          status: 'success',
+          duration: 3000,
+        });
+        
+        // Refresh the time slots
+        setTimeout(() => {
+          fetchTimeSlots(date);
+        }, 1000);
+      } else {
+        throw new Error('Failed to create time slots');
+      }
+    } catch (error) {
+      console.error('Error creating time slots:', error);
+      
+      // Use fallback slots
+      const fallbackSlots = createFallbackTimeSlots(date);
+      setTimeSlots(fallbackSlots);
+      
       toast({
-        title: 'Unable to load time slots',
-        description: 'You can still specify your preferred time below',
-        status: 'warning',
-        duration: 5000,
+        title: 'Using default time slots',
+        description: 'Backend unavailable, showing standard appointment times',
+        status: 'info',
+        duration: 4000,
       });
     } finally {
       setIsLoading(false);
@@ -203,14 +293,26 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
                   ))}
                 </SimpleGrid>
               ) : (
-                <Box textAlign="center" py={6} bg="gray.50" borderRadius="md">
-                  <Text color="gray.600" mb={2}>
-                    No time slots available for this date
-                  </Text>
-                  <Text fontSize="sm" color="gray.500">
-                    Please select a different date or specify your preferred time below
-                  </Text>
-                </Box>
+                <VStack spacing={4}>
+                  <Box textAlign="center" py={6} bg="gray.50" borderRadius="md">
+                    <Text color="gray.600" mb={2}>
+                      No time slots available for this date
+                    </Text>
+                    <Text fontSize="sm" color="gray.500">
+                      Please select a different date or specify your preferred time below
+                    </Text>
+                  </Box>
+                  
+                  <Button
+                    size="sm"
+                    colorScheme="blue"
+                    variant="outline"
+                    onClick={() => tryCreateTimeSlots(selectedDate)}
+                    isLoading={isLoading}
+                  >
+                    Try to Create Time Slots
+                  </Button>
+                </VStack>
               )}
             </Box>
 
