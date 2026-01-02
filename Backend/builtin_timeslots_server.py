@@ -276,8 +276,67 @@ class TimeSlotHandler(BaseHTTPRequestHandler):
                     self.send_json_response(response)
                     return
                 
+                else:
+                    # No slots found in Atlas, try to create them
+                    print(f"🏗️ No slots in Atlas for {target_date}, attempting to create...")
+                    
+                    # Skip Sundays
+                    if target_date.weekday() != 6:
+                        # Define time slots
+                        time_slots = [
+                            ('08:00', '09:00'), ('09:00', '10:00'), ('10:00', '11:00'), ('11:00', '12:00'),
+                            ('14:00', '15:00'), ('15:00', '16:00'), ('16:00', '17:00'), ('17:00', '18:00')
+                        ]
+                        
+                        created_slots = []
+                        for start_time_str, end_time_str in time_slots:
+                            start_datetime = datetime.combine(target_date, datetime.strptime(start_time_str, '%H:%M').time())
+                            end_datetime = datetime.combine(target_date, datetime.strptime(end_time_str, '%H:%M').time())
+                            
+                            slot_doc = {
+                                'date': target_date,
+                                'start_time': start_datetime,
+                                'end_time': end_datetime,
+                                'max_patients': 10,
+                                'unlimited_patients': False,
+                                'available_slots': 10,
+                                'booked_slots': 0,
+                                'available': True,
+                                'created_at': datetime.utcnow()
+                            }
+                            
+                            result = timeslots_collection.insert_one(slot_doc)
+                            
+                            slot_info = {
+                                'id': str(result.inserted_id),
+                                'date': target_date.isoformat(),
+                                'start_time': start_time_str,
+                                'end_time': end_time_str,
+                                'display_time': f"{start_time_str} - {end_time_str}",
+                                'available_slots': 10,
+                                'booked_slots': 0,
+                                'unlimited_patients': False,
+                                'available': True
+                            }
+                            created_slots.append(slot_info)
+                        
+                        if created_slots:
+                            client.close()
+                            print(f"✅ Created {len(created_slots)} slots in MongoDB Atlas")
+                            
+                            response = {
+                                'success': True,
+                                'date': date_param,
+                                'slots': created_slots,
+                                'source': 'mongodb_atlas_created',
+                                'total_slots': len(created_slots)
+                            }
+                            
+                            self.send_json_response(response)
+                            return
+                
                 client.close()
-                print("⚠️ No slots found in MongoDB Atlas, trying JSON fallback...")
+                print("⚠️ No slots found/created in MongoDB Atlas, trying JSON fallback...")
                 
             except ImportError:
                 print("⚠️ pymongo not available, using JSON fallback...")
@@ -412,29 +471,107 @@ class TimeSlotHandler(BaseHTTPRequestHandler):
             }, 400)
     
     def handle_book_test(self, request_data):
-        """Handle book test request"""
+        """Handle book test request with MongoDB Atlas integration"""
         try:
-            booking_id = f"BK{int(datetime.utcnow().timestamp())}"
+            print(f"📋 Booking request: {request_data}")
             
+            booking_id = f"BK{int(datetime.utcnow().timestamp())}"
+            time_slot_id = request_data.get('time_slot_id')
+            booking_date = request_data.get('booking_date', date.today().isoformat())
+            
+            # Handle time slot booking
+            time_slot_info = {'id': time_slot_id, 'time': 'Custom time'}
+            
+            if time_slot_id:
+                # Try to update time slot availability
+                try:
+                    # Check if it's a MongoDB Atlas ID or fallback ID
+                    if time_slot_id.startswith('fallback_') or time_slot_id.startswith('slot_'):
+                        # Handle fallback/JSON IDs
+                        print(f"📝 Handling fallback slot ID: {time_slot_id}")
+                        time_slot_info['time'] = request_data.get('preferred_time', 'Selected time slot')
+                        time_slot_info['source'] = 'fallback'
+                        
+                    else:
+                        # Try MongoDB Atlas ID
+                        print(f"📝 Handling MongoDB Atlas slot ID: {time_slot_id}")
+                        
+                        try:
+                            from pymongo import MongoClient
+                            from bson import ObjectId
+                            
+                            # Connect to MongoDB Atlas
+                            mongo_uri = "mongodb+srv://clinic_admin:12345%40clinic@cluster0.1rbiryd.mongodb.net/?appName=Cluster0"
+                            client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+                            db = client['infinite_clinic_db']
+                            timeslots_collection = db['timeslots']
+                            
+                            # Find and update the time slot
+                            slot = timeslots_collection.find_one({'_id': ObjectId(time_slot_id)})
+                            
+                            if slot:
+                                # Update booked slots
+                                new_booked = slot.get('booked_slots', 0) + 1
+                                available_slots = slot.get('available_slots', 10) - 1
+                                
+                                timeslots_collection.update_one(
+                                    {'_id': ObjectId(time_slot_id)},
+                                    {
+                                        '$set': {
+                                            'booked_slots': new_booked,
+                                            'available_slots': max(0, available_slots),
+                                            'available': available_slots > 0
+                                        }
+                                    }
+                                )
+                                
+                                start_time = slot['start_time'].strftime('%H:%M') if hasattr(slot['start_time'], 'strftime') else str(slot['start_time'])[:5]
+                                end_time = slot['end_time'].strftime('%H:%M') if hasattr(slot['end_time'], 'strftime') else str(slot['end_time'])[:5]
+                                time_slot_info['time'] = f"{start_time} - {end_time}"
+                                time_slot_info['source'] = 'mongodb_atlas'
+                                
+                                print(f"✅ Updated MongoDB Atlas slot: {time_slot_info['time']}")
+                            
+                            client.close()
+                            
+                        except Exception as mongo_error:
+                            print(f"⚠️ MongoDB Atlas booking error: {mongo_error}")
+                            time_slot_info['time'] = request_data.get('preferred_time', 'Selected time slot')
+                            time_slot_info['source'] = 'fallback_after_error'
+                
+                except Exception as slot_error:
+                    print(f"⚠️ Time slot processing error: {slot_error}")
+                    time_slot_info['time'] = request_data.get('preferred_time', 'Custom time')
+            
+            # Create booking response
             response = {
                 'success': True,
                 'message': 'Test booking successful!',
                 'booking_id': booking_id,
                 'total_amount': request_data.get('total_price', 0),
-                'booking_date': request_data.get('booking_date', date.today().isoformat()),
-                'time_slot_info': {
-                    'id': request_data.get('time_slot_id'),
-                    'time': request_data.get('preferred_time', 'Custom time')
+                'booking_date': booking_date,
+                'time_slot_info': time_slot_info,
+                'booking_details': {
+                    'cart_items': request_data.get('cart_items', []),
+                    'total_patients': len(request_data.get('cart_items', [])),
+                    'booking_time': datetime.utcnow().isoformat()
                 },
-                'note': 'Demo booking with JSON file storage'
+                'note': 'Booking processed successfully'
             }
             
+            print(f"✅ Booking successful: {booking_id}")
             self.send_json_response(response)
             
         except Exception as e:
+            print(f"❌ Booking error: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            
             self.send_json_response({
                 'success': False,
-                'error': str(e)
+                'error': f'Booking failed: {str(e)}',
+                'booking_id': None,
+                'details': 'Please try again or use custom time option'
             }, 400)
     
     def handle_home(self):
