@@ -1,16 +1,50 @@
 #!/usr/bin/env python3
 """
-SIMPLE WORKING TIME SLOTS API
-This will definitely work - no MongoDB complications
+SIMPLE WORKING TIME SLOTS API WITH BOOKING TRACKING
+This will definitely work - tracks bookings persistently
 """
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import urllib.parse
+import os
 from datetime import datetime, date, timedelta
 
+# File to store bookings persistently
+BOOKINGS_FILE = 'bookings_data.json'
+
+def load_bookings_data():
+    """Load bookings data from file"""
+    try:
+        if os.path.exists(BOOKINGS_FILE):
+            with open(BOOKINGS_FILE, 'r') as f:
+                return json.load(f)
+        else:
+            return {
+                "bookings": {},  # slot_id: booked_count
+                "booking_history": [],
+                "metadata": {
+                    "created_at": datetime.utcnow().isoformat(),
+                    "version": "1.0"
+                }
+            }
+    except Exception as e:
+        print(f"Error loading bookings: {e}")
+        return {"bookings": {}, "booking_history": [], "metadata": {}}
+
+def save_bookings_data(data):
+    """Save bookings data to file"""
+    try:
+        data['metadata']['last_updated'] = datetime.utcnow().isoformat()
+        with open(BOOKINGS_FILE, 'w') as f:
+            json.dump(data, f, indent=2, default=str)
+        return True
+    except Exception as e:
+        print(f"Error saving bookings: {e}")
+        return False
+
 class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
-    """Super simple handler that just works"""
+    """Simple handler with booking tracking"""
     
     def do_OPTIONS(self):
         """Handle CORS"""
@@ -31,13 +65,16 @@ class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
         self.wfile.write(response_json.encode('utf-8'))
     
     def create_time_slots_for_date(self, date_str):
-        """Create 8 time slots for any date"""
+        """Create 8 time slots for any date with booking tracking"""
         try:
             target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             
             # Skip Sundays
             if target_date.weekday() == 6:
                 return []
+            
+            # Load bookings data
+            bookings_data = load_bookings_data()
             
             # Always return 8 working time slots
             time_slots = [
@@ -53,16 +90,22 @@ class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
             
             slots = []
             for i, (start, end) in enumerate(time_slots):
+                slot_id = f'simple_{date_str}_{i}'
+                
+                # Get booked count for this slot
+                booked_count = bookings_data['bookings'].get(slot_id, 0)
+                available_count = max(0, 10 - booked_count)
+                
                 slot = {
-                    'id': f'simple_{date_str}_{i}',
+                    'id': slot_id,
                     'date': date_str,
                     'start_time': start,
                     'end_time': end,
                     'display_time': f"{start} - {end}",
-                    'available_slots': 10,
-                    'booked_slots': 0,
+                    'available_slots': available_count,
+                    'booked_slots': booked_count,
                     'unlimited_patients': False,
-                    'available': True
+                    'available': available_count > 0
                 }
                 slots.append(slot)
             
@@ -82,11 +125,19 @@ class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
             print(f"GET: {path}")
             
             if path == '/api/mongo/test/':
+                bookings_data = load_bookings_data()
+                total_bookings = sum(bookings_data['bookings'].values())
+                
                 self.send_json_response({
                     'success': True,
-                    'message': 'Simple Time Slots API Working',
+                    'message': 'Simple Time Slots API Working with Booking Tracking',
                     'timestamp': datetime.utcnow().isoformat(),
-                    'note': 'This is the simple, guaranteed working version'
+                    'stats': {
+                        'total_bookings': total_bookings,
+                        'unique_slots_booked': len(bookings_data['bookings']),
+                        'booking_history_count': len(bookings_data['booking_history'])
+                    },
+                    'note': 'This version tracks bookings and reduces availability'
                 })
                 
             elif path in ['/api/mongo/time-slots/', '/api/mongo/simple-time-slots/']:
@@ -99,14 +150,19 @@ class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
                     'success': True,
                     'date': date_param,
                     'slots': slots,
-                    'source': 'simple_guaranteed_working',
+                    'source': 'simple_with_booking_tracking',
                     'total_slots': len(slots)
                 })
                 
             elif path == '/':
                 self.send_json_response({
-                    'message': 'Simple Time Slots API',
+                    'message': 'Simple Time Slots API with Booking Tracking',
                     'status': 'working',
+                    'features': [
+                        'Persistent booking tracking',
+                        'Real-time availability updates',
+                        'Booking history'
+                    ],
                     'endpoints': [
                         '/api/mongo/test/',
                         '/api/mongo/time-slots/',
@@ -126,7 +182,7 @@ class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
             self.send_json_response({'error': str(e)}, 500)
     
     def do_POST(self):
-        """Handle POST requests"""
+        """Handle POST requests with booking tracking"""
         try:
             url_parts = urllib.parse.urlparse(self.path)
             path = url_parts.path
@@ -141,9 +197,51 @@ class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
                 request_data = {}
             
             print(f"POST: {path}")
+            print(f"Booking data: {request_data}")
             
             if path == '/api/mongo/book-test/':
                 booking_id = f"BK{int(datetime.utcnow().timestamp())}"
+                time_slot_id = request_data.get('time_slot_id')
+                
+                # Load bookings data
+                bookings_data = load_bookings_data()
+                
+                # Track the booking if time slot is provided
+                if time_slot_id and time_slot_id.startswith('simple_'):
+                    # Get current booked count
+                    current_booked = bookings_data['bookings'].get(time_slot_id, 0)
+                    
+                    # Check if slot is still available
+                    if current_booked >= 10:
+                        self.send_json_response({
+                            'success': False,
+                            'error': 'Time slot is fully booked',
+                            'message': 'This time slot is no longer available',
+                            'available_slots': 0
+                        }, 400)
+                        return
+                    
+                    # Update booking count
+                    bookings_data['bookings'][time_slot_id] = current_booked + 1
+                    
+                    # Add to booking history
+                    booking_record = {
+                        'booking_id': booking_id,
+                        'time_slot_id': time_slot_id,
+                        'booking_date': request_data.get('booking_date', date.today().isoformat()),
+                        'total_amount': request_data.get('total_price', 0),
+                        'cart_items': request_data.get('cart_items', []),
+                        'booked_at': datetime.utcnow().isoformat()
+                    }
+                    bookings_data['booking_history'].append(booking_record)
+                    
+                    # Save updated bookings data
+                    save_bookings_data(bookings_data)
+                    
+                    # Calculate new availability
+                    new_available = max(0, 10 - (current_booked + 1))
+                    
+                    print(f"✅ Booked slot {time_slot_id}: {current_booked + 1}/10 booked, {new_available} available")
                 
                 self.send_json_response({
                     'success': True,
@@ -152,10 +250,11 @@ class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
                     'total_amount': request_data.get('total_price', 0),
                     'booking_date': request_data.get('booking_date', date.today().isoformat()),
                     'time_slot_info': {
-                        'id': request_data.get('time_slot_id'),
-                        'time': request_data.get('preferred_time', 'Selected time slot')
+                        'id': time_slot_id,
+                        'time': request_data.get('preferred_time', 'Selected time slot'),
+                        'new_available_slots': new_available if time_slot_id and time_slot_id.startswith('simple_') else 'N/A'
                     },
-                    'note': 'Simple booking system - always works'
+                    'note': 'Booking tracked - availability updated in real-time'
                 })
                 
             else:
@@ -163,6 +262,8 @@ class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
                 
         except Exception as e:
             print(f"POST error: {e}")
+            import traceback
+            traceback.print_exc()
             self.send_json_response({'error': str(e)}, 500)
     
     def log_message(self, format, *args):

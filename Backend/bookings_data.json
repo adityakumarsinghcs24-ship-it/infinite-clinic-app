@@ -1,0 +1,25 @@
+{
+  "bookings": {
+    "simple_2026-01-02_0": 1
+  },
+  "booking_history": [
+    {
+      "booking_id": "BK1767340956",
+      "time_slot_id": "simple_2026-01-02_0",
+      "booking_date": "2026-01-02",
+      "total_amount": 200,
+      "cart_items": [
+        {
+          "price": 200,
+          "name": "Sugar Fasting"
+        }
+      ],
+      "booked_at": "2026-01-02T13:32:36.923266"
+    }
+  ],
+  "metadata": {
+    "created_at": "2026-01-02T13:32:36.923266",
+    "version": "1.0",
+    "last_updated": "2026-01-02T13:32:36.923266"
+  }
+}
