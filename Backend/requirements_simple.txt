@@ -1,0 +1,2 @@
+# Simple API - No dependencies needed
+# This API uses only Python built-in modules
