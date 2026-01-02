@@ -33,12 +33,14 @@ interface TimeSlotSelectorProps {
   onTimeSlotSelect: (slotId: string | null, slotInfo: string) => void;
   selectedDate: string;
   onDateChange: (date: string) => void;
+  refreshTrigger?: number; // Add refresh trigger prop
 }
 
 export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
   onTimeSlotSelect,
   selectedDate,
-  onDateChange
+  onDateChange,
+  refreshTrigger = 0
 }) => {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
@@ -59,7 +61,7 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
     if (selectedDate) {
       fetchTimeSlots(selectedDate);
     }
-  }, [selectedDate]);
+  }, [selectedDate, refreshTrigger]); // Add refreshTrigger to dependencies
 
   const fetchTimeSlots = async (date: string) => {
     setIsLoading(true);
@@ -86,12 +88,13 @@ export const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
       
       // Show success message if we got slots
       if (data.slots && data.slots.length > 0) {
-        const source = data.source === 'simple_backend' ? 'backend (simple)' : 'backend (full)';
+        const source = data.source === 'simple_with_booking_tracking' ? 'backend (with live booking tracking)' : 
+                     data.source === 'simple_guaranteed_working' ? 'backend (simple)' : 'backend (full)';
         toast({
-          title: 'Time slots loaded',
+          title: 'Time slots updated',
           description: `Loaded ${data.slots.length} slots from ${source}`,
           status: 'success',
-          duration: 3000,
+          duration: 2000,
         });
       } else {
         toast({

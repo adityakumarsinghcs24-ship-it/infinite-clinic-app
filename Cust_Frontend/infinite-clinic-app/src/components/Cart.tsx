@@ -15,6 +15,7 @@ export const Cart = ({ cart, onRemove }: any) => {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [selectedTimeInfo, setSelectedTimeInfo] = useState<string>('');
   const [prescriptionFiles, setPrescriptionFiles] = useState<{[key: string]: {name: string, data: string}}>({});
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Add refresh trigger
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
@@ -122,6 +123,10 @@ export const Cart = ({ cart, onRemove }: any) => {
 
       setBookingDetails(result);
       setIsCheckoutComplete(true);
+      
+      // Refresh time slots to show updated availability
+      setRefreshTrigger(prev => prev + 1);
+      
       onClose(); // Close the booking modal
 
     } catch (error: any) {
@@ -233,6 +238,7 @@ export const Cart = ({ cart, onRemove }: any) => {
                 onTimeSlotSelect={handleTimeSlotSelect}
                 selectedDate={selectedDate}
                 onDateChange={setSelectedDate}
+                refreshTrigger={refreshTrigger}
               />
 
               {/* Prescription Upload for each patient */}
