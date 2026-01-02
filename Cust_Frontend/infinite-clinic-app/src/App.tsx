@@ -18,6 +18,7 @@ import { TestAPI } from './components/TestAPI';
 import { Debug } from './components/Debug';
 import { SimpleLogin } from './components/SimpleLogin';
 import { BasicTest } from './components/BasicTest';
+import { TimeSlotDebug } from './components/TimeSlotDebug';
 
 
 const Header = () => {
@@ -184,6 +185,7 @@ function AppContent() {
             <Route path="/signup" element={<AuthPage />} />
             <Route path="/test-api" element={<TestAPI />} />
             <Route path="/debug" element={<Debug />} />
+            <Route path="/time-debug" element={<TimeSlotDebug />} />
             <Route path="/simple-login" element={<SimpleLogin />} />
             <Route path="/basic-test" element={<BasicTest />} />
           </Routes>

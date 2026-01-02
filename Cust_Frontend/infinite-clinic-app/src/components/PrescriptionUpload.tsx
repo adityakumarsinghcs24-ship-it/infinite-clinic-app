@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import {
   Box,
+  Button,
   Text,
   VStack,
   HStack,
@@ -120,6 +121,10 @@ export const PrescriptionUpload: React.FC<PrescriptionUploadProps> = ({
     }
   };
 
+  const handleBrowseClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <Box borderWidth="1px" borderRadius="lg" p={4} bg="white">
       <VStack spacing={4} align="stretch">
@@ -145,7 +150,7 @@ export const PrescriptionUpload: React.FC<PrescriptionUploadProps> = ({
           </Alert>
         ) : (
           // Show upload area
-          <>
+          <VStack spacing={4}>
             <Box
               border="2px dashed"
               borderColor={isDragging ? "#384A5C" : "#CBD5E0"}
@@ -158,7 +163,7 @@ export const PrescriptionUpload: React.FC<PrescriptionUploadProps> = ({
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
+              onClick={handleBrowseClick}
               _hover={{
                 borderColor: "#384A5C",
                 bg: "#D7EBF0"
@@ -175,6 +180,17 @@ export const PrescriptionUpload: React.FC<PrescriptionUploadProps> = ({
               </VStack>
             </Box>
 
+            {/* Alternative browse button */}
+            <Button
+              onClick={handleBrowseClick}
+              leftIcon={<Icon as={FiUpload} />}
+              colorScheme="blue"
+              variant="outline"
+              size="sm"
+            >
+              Choose File
+            </Button>
+
             <input
               ref={fileInputRef}
               type="file"
@@ -184,14 +200,14 @@ export const PrescriptionUpload: React.FC<PrescriptionUploadProps> = ({
             />
 
             {isUploading && (
-              <Box>
+              <Box w="100%">
                 <Text fontSize="sm" color="#31373C" mb={2}>
                   Uploading prescription...
                 </Text>
                 <Progress colorScheme="blue" isIndeterminate />
               </Box>
             )}
-          </>
+          </VStack>
         )}
 
         <Text fontSize="xs" color="gray.500">
