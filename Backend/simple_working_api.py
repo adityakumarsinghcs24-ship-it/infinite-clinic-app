@@ -261,18 +261,59 @@ class SimpleTimeSlotHandler(BaseHTTPRequestHandler):
     """Simple handler with booking tracking"""
     
     def do_OPTIONS(self):
-        """Handle CORS"""
-        self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        """Handle CORS preflight requests"""
+        # Get the origin from the request
+        origin = self.headers.get('Origin', '*')
+        
+        # Allow specific origins or all origins
+        allowed_origins = [
+            'https://infinite-clinic-app.vercel.app',
+            'https://infinite-clinic-app-git-main-adityakumarsinghcs24-ship-its-projects.vercel.app',
+            'http://localhost:3000',
+            'http://localhost:5173',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:5173'
+        ]
+        
+        if origin in allowed_origins or origin == '*':
+            self.send_response(200)
+            self.send_header('Access-Control-Allow-Origin', origin)
+        else:
+            self.send_response(200)
+            self.send_header('Access-Control-Allow-Origin', '*')
+            
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+        self.send_header('Access-Control-Allow-Credentials', 'true')
+        self.send_header('Access-Control-Max-Age', '86400')
         self.end_headers()
     
     def send_json_response(self, data, status_code=200):
-        """Send JSON response"""
+        """Send JSON response with comprehensive CORS headers"""
+        # Get the origin from the request
+        origin = self.headers.get('Origin', '*')
+        
+        # Allow specific origins or all origins
+        allowed_origins = [
+            'https://infinite-clinic-app.vercel.app',
+            'https://infinite-clinic-app-git-main-adityakumarsinghcs24-ship-its-projects.vercel.app',
+            'http://localhost:3000',
+            'http://localhost:5173',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:5173'
+        ]
+        
         self.send_response(status_code)
         self.send_header('Content-Type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
+        
+        if origin in allowed_origins:
+            self.send_header('Access-Control-Allow-Origin', origin)
+        else:
+            self.send_header('Access-Control-Allow-Origin', '*')
+            
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+        self.send_header('Access-Control-Allow-Credentials', 'true')
         self.end_headers()
         
         response_json = json.dumps(data, default=str, indent=2)
