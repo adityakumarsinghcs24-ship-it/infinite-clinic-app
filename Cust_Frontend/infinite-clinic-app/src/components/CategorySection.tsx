@@ -32,7 +32,7 @@ export const CategorySection = () => {
             </VStack>
           );
 
-          if (test.name === 'View More') {
+          if (test.name === 'View More' || 'Vitamin D3' || 'CBC' || 'Lipid Profile Screen' || 'Thyroid Profile' || 'Sugar Fasting') {
             return (
               <RouterLink to="/all-tests" key={test.name}>
                 {bubbleContent}

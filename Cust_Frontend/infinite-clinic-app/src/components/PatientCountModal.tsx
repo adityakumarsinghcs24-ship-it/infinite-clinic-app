@@ -19,7 +19,7 @@ export const PatientCountModal = ({ isOpen, onClose, onConfirm, patientCount, se
           </FormControl>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>
+          <Button color="#384a5c" mr={3} onClick={onClose}>
             Cancel
           </Button>
           <Button colorScheme="blue" onClick={onConfirm}>

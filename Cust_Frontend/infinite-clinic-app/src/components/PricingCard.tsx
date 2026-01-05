@@ -1,5 +1,6 @@
 import { VStack, Heading, Text, List, ListItem, ListIcon, Button } from '@chakra-ui/react';
 import { FaCheckCircle } from 'react-icons/fa';
+import { Link as RouterLink } from 'react-router-dom';
 
 export const PricingCard = ({ plan, isActive, onMouseEnter, onMouseLeave, id }: any) => {
   return (
@@ -30,7 +31,17 @@ export const PricingCard = ({ plan, isActive, onMouseEnter, onMouseLeave, id }: 
           </ListItem>
         ))}
       </List>
-      <Button color={isActive ? 'WHITE' : 'BLACK'} backgroundColor={isActive ? '#384A5C':'#ADD8E6'}borderWidth='2px' borderColor='#31373C' _hover={{backgroundColor:'white', color: 'black'}}mt="auto" pt={6} pb={6}>
+      
+      <Button 
+        as={RouterLink}
+        to="/health-plans"
+        color={isActive ? 'WHITE' : 'BLACK'} 
+        backgroundColor={isActive ? '#384A5C':'#ADD8E6'}
+        borderWidth='2px' 
+        borderColor='#31373C' 
+        _hover={{backgroundColor:'white', color: 'black'}}
+        mt="auto" pt={6} pb={6}
+      >
         Book Now
       </Button>
     </VStack>

@@ -12,13 +12,13 @@ import { HomePage } from './components/HomePage';
 import { Footer } from './components/Footer';
 import { FaqPage } from './components/FaqPage';
 import { AboutUs } from './components/AboutUs';
+import { HealthPlansPage } from './components/HealthPlansPage';
 import { TestBookingPage } from './components/TestBookingPage';
 import { AuthPage } from './components/AuthPage';
 import { TestAPI } from './components/TestAPI';
 import { Debug } from './components/Debug';
 import { SimpleLogin } from './components/SimpleLogin';
 import { BasicTest } from './components/BasicTest';
-import { TimeSlotDebug } from './components/TimeSlotDebug';
 
 
 const Header = () => {
@@ -180,12 +180,12 @@ function AppContent() {
             <Route path="/faq" element={<MainLayout><FaqPage /></MainLayout>} />
             <Route path="/AboutUs" element={<MainLayout><AboutUs /></MainLayout>} />
             <Route path="/all-tests" element={<MainLayout><TestBookingPage /></MainLayout>} />
+            <Route path="/health-plans" element={<HealthPlansPage />} />
 
             <Route path="/login" element={<AuthPage />} />
             <Route path="/signup" element={<AuthPage />} />
             <Route path="/test-api" element={<TestAPI />} />
             <Route path="/debug" element={<Debug />} />
-            <Route path="/time-debug" element={<TimeSlotDebug />} />
             <Route path="/simple-login" element={<SimpleLogin />} />
             <Route path="/basic-test" element={<BasicTest />} />
           </Routes>

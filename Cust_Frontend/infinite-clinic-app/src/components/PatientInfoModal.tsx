@@ -85,7 +85,7 @@ export const PatientInfoModal = ({ isOpen, onClose, cartItem, onSave }: any) => 
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>Cancel</Button>
+          <Button color='#384a5c' mr={3} onClick={onClose}>Cancel</Button>
           <Button colorScheme="blue" onClick={handleSave}>Save Information</Button>
         </ModalFooter>
       </ModalContent>

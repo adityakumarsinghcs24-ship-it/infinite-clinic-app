@@ -15,7 +15,7 @@ export const Footer = () => {
 
           <VStack align="flex-start" spacing={4}>
             <Heading size="md" color="white">Explore about us</Heading>
-            <ChakraLink as={Link} to="/about-us">Who we are</ChakraLink>
+            <ChakraLink as={Link} to="/AboutUs">Who we are</ChakraLink>
           </VStack>
           
           <Box />

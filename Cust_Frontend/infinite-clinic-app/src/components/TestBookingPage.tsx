@@ -111,6 +111,7 @@ export const TestBookingPage = () => {
                                 <AnimatePresence>
                                     {filteredTests.map((test) => {
                                         const cartItem = cart.find(item => item.id === test.id);
+                                        const idNumber = parseInt(test.id.replace('t', ''));
                                         return (
                                             <TestCard
                                                 key={test.id}
@@ -122,6 +123,7 @@ export const TestBookingPage = () => {
                                                 }}
                                             />
                                         );
+
                                     })}
                                 </AnimatePresence>
                             </VStack>
@@ -151,6 +153,7 @@ export const TestBookingPage = () => {
                     onSave={handleSavePatientInfo}
                 />
             )}
+            
         </>
     );
 };
