@@ -2,25 +2,44 @@ import React, { useState } from 'react';
 import {
   Box,
   Button,
-  Container,
   Flex,
-  Heading,
-  Input,
-  Text,
-  VStack,
   FormControl,
   FormLabel,
-  useToast,
-  Divider,
+  Heading,
+  Icon,
+  IconButton,
+  Input,
   InputGroup,
+  InputLeftElement,
   InputRightElement,
+  Stack,
+  Text,
+  VStack,
+  HStack,
+  Divider,
+  AbsoluteCenter,
+  useToast,
+  Link,
+  useColorModeValue,
 } from '@chakra-ui/react';
-// Using simple text for show/hide password 
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  EmailIcon,
+  LockIcon,
+  ViewIcon,
+  ViewOffIcon,
+} from '@chakra-ui/icons';
+import { FaHeart, FaUserPlus, FaSignInAlt, FaClinicMedical } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_ENDPOINTS } from '../config/api';
 
+// Animation components
+const MotionBox = motion(Box);
+const MotionVStack = motion(VStack);
+
 export const AuthPage = () => {
+  // --- LOGIC SECTION ---
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +51,7 @@ export const AuthPage = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    confirmPassword: '', // Only for signup
+    confirmPassword: '', 
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,8 +61,6 @@ export const AuthPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    console.log('Form submitted:', { isLogin, formData }); // Debug log
 
     // Basic Validation
     if (!isLogin && formData.password !== formData.confirmPassword) {
@@ -60,25 +77,19 @@ export const AuthPage = () => {
     // --- MONGODB BACKEND CONNECTION ---
     const endpoint = isLogin ? API_ENDPOINTS.LOGIN : API_ENDPOINTS.REGISTER;
     
-    console.log('Making request to:', endpoint); // Debug log
-    
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: formData.email,
           email: formData.email,
           password: formData.password,
         }),
-        credentials: 'include', // Important for cookies
+        credentials: 'include',
       });
 
-      console.log('Response status:', response.status); // Debug log
       const data = await response.json();
-      console.log('Response data:', data); // Debug log
 
       if (response.ok) {
         toast({
@@ -92,163 +103,294 @@ export const AuthPage = () => {
         if (data.user) {
           login(data.user);
         } else {
-          // Fallback user data (shouldn't be needed now)
           login({
-            id: 1,
+            id: 1, // Fallback ID
             username: formData.email.split('@')[0],
             email: formData.email
           });
         }
         
-        // Redirect logic
         navigate('/'); 
       } else {
         throw new Error(data.message || "Something went wrong");
       }
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: "Authentication Failed",
         description: error.message,
         status: "error",
         duration: 4000,
+        isClosable: true,
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <Box minH="100vh" py={{ base: 12, md: 20 }}>
-      <Container maxW="container.lg">
-        {/* Header Section similar to About Us */}
-        <Heading
-          as="h2"
-          size="3xl"
-          mb={10}
-          textAlign="center"
-          fontWeight="extrabold"
-          color="#31373C"
-        >
-          {isLogin ? 'Welcome Back.' : 'Join InfiniteClinic.'}
-        </Heading>
+  const toggleMode = () => {
+    setIsLogin(!isLogin);
+    setFormData({ email: '', password: '', confirmPassword: '' });
+    setShowPassword(false);
+  };
 
-        <Flex
-          direction={{ base: 'column', md: 'row' }}
-          gap={{ base: 10, md: 16 }}
-          align="center"
+
+  const brandDark = "#384A5C";
+  const brandLight = "#D2DEEA";
+ return (
+    <Flex minH="100vh">
+      {/*LEFT PANEL*/}
+      <Box
+        display={{ base: "none", lg: "flex" }}
+        w="50%"
+
+        bgGradient="linear(to-br, #607183, #384a5c, #607183)" 
+        position="relative"
+        overflow="hidden"
+      >
+        <Box
+          position="absolute"
+          top="20"
+          left="20"
+          w="64"
+          h="64"
+          borderRadius="full"
+          bg="#d7ebf0"
+          opacity={0.2}
+          filter="blur(60px)"
+        />
+        <Box
+          position="absolute"
+          bottom="20"
+          right="10"
+          w="80"
+          h="80"
+          borderRadius="full"
+          bg="#adc1d6"
+          opacity={0.15}
+          filter="blur(60px)"
+        />
+         <Box
+          position="absolute"
+          top="50%"
+          left="33%"
+          w="48"
+          h="48"
+          borderRadius="full"
+          bg="#d7ebf0"
+          opacity={0.1}
+          filter="blur(40px)"
+        />
+
+        <VStack
+          position="relative"
+          zIndex={10}
           justify="center"
+          align="center"
+          w="full"
+          p={12}
+          color="#fffefeff"
+          spacing={8}
         >
-          {/* Main Auth Card */}
+          <HStack spacing={3}>
+            <Flex
+              w={14}
+              h={14}
+              borderRadius="2xl"
+              bg="rgba(255, 255, 255, 0.2)"
+              align="center"
+              justify="center"
+              backdropFilter="blur(8px)"
+            >
+              <Icon as={FaClinicMedical} boxSize={8} color="#FFFFFF" />
+            </Flex>
+            <Text fontSize="3xl" fontWeight="bold" letterSpacing="tight">
+              InfiniteClinic
+            </Text>
+          </HStack>
+
+          <VStack spacing={2}>
+            <Heading
+              size="xl"
+              textAlign="center"
+              lineHeight="tight"
+              fontWeight="bold"
+            >
+              Healthcare <br /> Reimagined.
+            </Heading>
+          </VStack>
+
+          <Text fontSize="lg" textAlign="center" color="rgba(255, 255, 255, 0.8)" maxW="md">
+            Manage your clinic seamlessly. Secure, reliable, and designed for modern healthcare professionals.
+          </Text>
+        </VStack>
+      </Box>
+
+      {/*RIGHT PANEL*/}
+      <Flex
+        w={{ base: "full", lg: "50%" }}
+        align="center"
+        justify="center"
+        p={{ base: 6, sm: 12 }}
+        bg="#e3eaf2ff"
+      >
+        <MotionBox
+          w="full"
+          maxW="md"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Mobile Logo*/}
+          <HStack display={{ base: "flex", lg: "none" }} justify="center" spacing={2} mb={8}>
+             <Icon as={FaClinicMedical} boxSize={8} color={brandDark} />
+             <Text fontSize="2xl" fontWeight="bold" color={brandDark}>
+              InfiniteClinic
+            </Text>
+          </HStack>
+
           <Box
-            flex={{ base: '1', md: '0.6' }}
-            bg="#D2DEEA95" // Your specific transparent blue
-            borderColor="#31373C"
-            borderWidth="1px"
-            borderRadius="30px" // Matching your design language
-            p={{ base: 8, md: 12 }}
-            boxShadow="lg"
-            width="100%"
+            bg="white"
+            borderRadius="2xl"
+            boxShadow="xl"
+            p={{ base: 6, md: 10 }}
           >
-            <VStack spacing={6} as="form" onSubmit={handleSubmit} align="stretch">
-              
-              <Heading as="h3" size="lg" textAlign="center" color="#31373C">
-                {isLogin ? 'Sign In' : 'Create Account'}
+            <VStack spacing={2} mb={8} textAlign="center">
+              <Heading size="lg" color={brandDark}>
+                {isLogin ? "Welcome Back" : "Join InfiniteClinic"}
               </Heading>
-              
-              <Divider borderColor="#31373C" />
-
-              <FormControl isRequired>
-                <FormLabel color="#31373C">Email Address</FormLabel>
-                <Input
-                  name="email"
-                  type="email"
-                  bg="white"
-                  borderColor="#31373C"
-                  _hover={{ borderColor: '#384A5C' }}
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="name@example.com"
-                  borderRadius="10px"
-                />
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel color="#31373C">Password</FormLabel>
-                <InputGroup>
-                  <Input
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    bg="white"
-                    borderColor="#31373C"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    borderRadius="10px"
-                    placeholder="Enter your password"
-                  />
-                  <InputRightElement width="4.5rem">
-                    <Button
-                      h="1.75rem"
-                      size="sm"
-                      onClick={() => setShowPassword(!showPassword)}
-                      bg="transparent"
-                      fontSize="xs"
-                    >
-                      {showPassword ? 'Hide' : 'Show'}
-                    </Button>
-                  </InputRightElement>
-                </InputGroup>
-              </FormControl>
-
-              {!isLogin && (
-                <FormControl isRequired>
-                  <FormLabel color="#31373C">Confirm Password</FormLabel>
-                  <Input
-                    name="confirmPassword"
-                    type="password"
-                    bg="white"
-                    borderColor="#31373C"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    borderRadius="10px"
-                    placeholder="Confirm your password"
-                  />
-                </FormControl>
-              )}
-
-              <Button
-                type="submit"
-                isLoading={isLoading}
-                loadingText="Processing"
-                backgroundColor="#384A5C" // Your primary dark blue
-                color="#ffffff"
-                size="lg"
-                width="100%"
-                _hover={{ bg: '#2C3A48' }}
-                mt={4}
-                borderRadius="10px"
-              >
-                {isLogin ? 'Sign In' : 'Sign Up'}
-              </Button>
-
-              <Text textAlign="center" fontSize="sm" color="#384a5c">
-                {isLogin ? "Don't have an account? " : "Already have an account? "}
-                <Button
-                  variant="link"
-                  color="#ffffff" 
-                  fontWeight="bold"
-                  onClick={() => {
-                    setIsLogin(!isLogin);
-                    setFormData({ email: '', password: '', confirmPassword: '' });
-                  }}
-                >
-                  {isLogin ? 'Sign Up' : 'Log In'}
-                </Button>
+              <Text color="gray.500">
+                {isLogin
+                  ? "Sign in to access your dashboard"
+                  : "Start your journey today"}
               </Text>
-
             </VStack>
+
+            <form onSubmit={handleSubmit}>
+              <Stack spacing={5}>
+                
+                {/* Email*/}
+                <FormControl isRequired>
+                  <FormLabel>Email Address</FormLabel>
+                  <InputGroup>
+                    <InputLeftElement h="48px" pointerEvents="none">
+                      <EmailIcon color="gray.400" boxSize={5} />
+                    </InputLeftElement>
+                    <Input
+                      name="email"
+                      type="email"
+                      placeholder="name@example.com"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      h="48px"
+                      pl={12}
+                    />
+                  </InputGroup>
+                </FormControl>
+
+                {/* Password*/}
+                <FormControl isRequired>
+                  <FormLabel>Password</FormLabel>
+                  <InputGroup>
+                    <InputLeftElement h="48px" pointerEvents="none">
+                      <LockIcon color="gray.400" boxSize={5} />
+                    </InputLeftElement>
+                    <Input
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      h="48px"
+                      pl={12}
+                      pr={12}
+                    />
+                    <InputRightElement h="48px">
+                      <IconButton
+                        aria-label={showPassword ? "Hide" : "Show"}
+                        icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                        color="black"
+                        onClick={() => setShowPassword(!showPassword)}
+                      />
+                    </InputRightElement>
+                  </InputGroup>
+                </FormControl>
+
+                {/* Confirm Password*/}
+                <AnimatePresence>
+                  {!isLogin && (
+                    <MotionVStack
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      overflow="hidden"
+                    >
+                      <FormControl isRequired w="full" pt={5}>
+                        <FormLabel>Confirm Password</FormLabel>
+                        <InputGroup>
+                          <InputLeftElement h="48px" pointerEvents="none">
+                            <LockIcon color="gray.400" boxSize={5} />
+                          </InputLeftElement>
+                          <Input
+                            name="confirmPassword"
+                            type="password"
+                            placeholder="Confirm your password"
+                            value={formData.confirmPassword}
+                            onChange={handleInputChange}
+                            h="48px"
+                            pl={12}
+                          />
+                        </InputGroup>
+                      </FormControl>
+                    </MotionVStack>
+                  )}
+                </AnimatePresence>
+
+                {/* Submit*/}
+                <Button
+                  type="submit"
+                  size="lg"
+                  borderColor={brandDark}
+                  h="48px"
+                  bg={brandDark}
+                  color="white"
+                  isLoading={isLoading}
+                  _hover={{ bg: "#D7EBF0", color:"#31373C" }}
+                  leftIcon={
+                    isLogin ? <Icon as={FaSignInAlt} /> : <Icon as={FaUserPlus} />
+                  }
+                >
+                  {isLogin ? "Sign In" : "Create Account"}
+                </Button>
+              </Stack>
+            </form>
+
+            {/*Divider*/}
+            <Box position="relative" my={8}>
+              <Divider borderColor="gray.200" />
+              <AbsoluteCenter bg="white" px={4}>
+                <Text fontSize="sm" color="gray.500">
+                  {isLogin ? "New here?" : "Member already?"}
+                </Text>
+              </AbsoluteCenter>
+            </Box>
+
+            {/*Toggle*/}
+            <Button
+              variant="outline"
+              w="full"
+              size="lg"
+              h="48px"
+              color="white"
+              bg={brandDark}
+              _hover={{ bg: "#D7EBF0", color: "#384A5C"}}
+              onClick={toggleMode}
+            >
+              {isLogin ? "Create an account" : "Sign in instead"}
+            </Button>
+
           </Box>
-        </Flex>
-      </Container>
-    </Box>
+        </MotionBox>
+      </Flex>
+    </Flex>
   );
 };
