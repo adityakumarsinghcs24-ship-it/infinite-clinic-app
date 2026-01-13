@@ -10,7 +10,6 @@ import { FaCalendarCheck, FaUserEdit, FaSave } from 'react-icons/fa';
 export const Dashboard = () => {
   const toast = useToast();
 
-  // --- STATE 1: User Profile Data ---
   const [profile, setProfile] = useState({
     name: 'Student User',
     email: 'student@example.com',
@@ -18,25 +17,22 @@ export const Dashboard = () => {
     age: '21'
   });
 
-  // --- STATE 2: Mock Bookings Data ---
-  // In a real app, you would fetch this from your backend
+
   const bookings = [
     { id: 1, test: 'Comprehensive Scan', date: 'Jan 24, 2026', time: '10:00 AM', price: '₹1700', status: 'Upcoming' },
     { id: 2, test: 'Basic Wellness', date: 'Jan 10, 2026', time: '09:00 AM', price: '₹900', status: 'Completed' },
   ];
 
-  // Handle Input Changes
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfile(prev => ({ ...prev, [name]: value }));
   };
 
-  // specific to Age (numbers only)
   const handleAgeChange = (value: string) => {
     setProfile(prev => ({ ...prev, age: value }));
   };
 
-  // Mock Save Function
   const handleSave = () => {
     toast({
       title: "Profile Updated.",

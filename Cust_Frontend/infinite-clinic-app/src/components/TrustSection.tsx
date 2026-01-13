@@ -42,11 +42,11 @@ export const TrustSection = () => {
           <Flex
             align="center"
             justify="center"
-            bg="rgba(170, 214, 202, 0.3)" 
+            bg="#384a5ce4" 
             backdropFilter="blur(5px)"
             border="1px solid"
-            borderColor="#AAD6CA"
-            color="#2D3A45"
+            borderColor="#ffffff"
+            color="#ffffff"
             px={5}
             py={2}
             borderRadius="full"
@@ -54,7 +54,7 @@ export const TrustSection = () => {
             fontWeight="600"
             boxShadow="sm"
             transition="all 0.2s"
-            _hover={{ bg: "rgba(170, 214, 202, 0.5)" }}
+            _hover={{ bg: "#384a5c" }}
           >
             <Text as="span">We care for your health like family. Get in touch with us now</Text>
             <Box w="1px" h="15px" bg="#384A5C" mx={3} opacity={0.3} />
@@ -64,7 +64,7 @@ export const TrustSection = () => {
               onClick={scrollToBottom}
               cursor="pointer"
               textDecoration="none" 
-              _hover={{ textDecoration: "underline", color: "#ffffff", bg: "#000000", borderRadius: "6px" }}
+              _hover={{ textDecoration: "underline", color: "#000000", bg: "#ffffff", borderRadius: "6px" }}
               fontWeight="700"
             >
                Contact Us

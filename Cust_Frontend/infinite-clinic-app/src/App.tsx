@@ -1,7 +1,6 @@
 import { Box, Flex, Heading, Button, Link as ChakraLink, VStack, Menu, MenuButton, MenuList, MenuItem} from '@chakra-ui/react';
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { Link as ScrollLink } from 'react-scroll';
 import { Routes, Route, Link as RouterLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -11,7 +10,6 @@ import { getDisplayUsername } from './utils/userUtils';
 import { HomePage } from './components/HomePage';
 import { Footer } from './components/Footer';
 import { FaqPage } from './components/FaqPage';
-// Ensure these files are actually in src/components/
 import { Dashboard } from './components/Dashboard';
 import { AboutUs } from './components/AboutUs';
 import { HealthPlansPage } from './components/HealthPlansPage';
@@ -38,10 +36,15 @@ const Header = () => {
 
       <Flex alignItems="center" gap={8}>
         <Flex gap={6} fontWeight="medium" fontSize="md">
+          {/* UPDATED: Links now use ChakraLink for consistent styling */}
           {path === '/' ? (
             <>
-              <ScrollLink to="book-a-test" smooth={true} duration={500} offset={-150} style={{ cursor: 'pointer' }}>Book a test</ScrollLink>
-              <ScrollLink to="health-plans" smooth={true} duration={500} offset={-30} style={{ cursor: 'pointer' }}>Health plans</ScrollLink>
+              <ChakraLink as={RouterLink} to="/all-tests" _hover={{ textDecoration: 'none' }}>
+                Book a test
+              </ChakraLink>
+              <ChakraLink as={RouterLink} to="/health-plans" _hover={{ textDecoration: 'none' }}>
+                Health plans
+              </ChakraLink>
             </>
           ) : (
             <ChakraLink as={RouterLink} to="/" _hover={{ textDecoration: 'none' }}>Home</ChakraLink>
@@ -67,7 +70,6 @@ const Header = () => {
             </MenuButton>
             <MenuList>
               <MenuItem onClick={logout}>Logout</MenuItem>
-              {/* Optional: Add a link to Dashboard here too */}
               <MenuItem as={RouterLink} to="/dashboard">My Dashboard</MenuItem>
             </MenuList>
           </Menu>
@@ -84,7 +86,7 @@ const Header = () => {
               borderWidth: '2px',
               borderColor: '#000000'
             }}>
-            Log In
+            Sign In
           </Button>
         )}
       </Flex>
@@ -114,21 +116,16 @@ function AppContent() {
   const location = useLocation();
 
   useEffect(() => {
-    // Start keep-alive service to prevent cold starts
     keepAliveService.start();
-    
-    // Cleanup on unmount
     return () => {
       keepAliveService.stop();
     };
   }, []);
 
-  // --- FIXED PRELOADER LOGIC ---
   useEffect(() => {
     const animationTimeout = setTimeout(() => {
       const destination = document.getElementById('logo-destination');
       
-      // Case 1: We are on the Home/Main pages where the Header exists
       if (preloaderLogoRef.current && destination && loadingBarRef.current) {
         gsap.set(preloaderLogoRef.current, { autoAlpha: 0 }); 
         
@@ -149,13 +146,11 @@ function AppContent() {
             onComplete: () => preloaderRef.current?.remove() 
           }, "-=1.2");
       } 
-      // Case 2: We are on Dashboard or pages without Header (destination is null)
-      // We just fade out the loader immediately so the user can see the page.
       else if (preloaderRef.current) {
          gsap.to(preloaderRef.current, { 
-            duration: 0.5, 
-            opacity: 0, 
-            onComplete: () => preloaderRef.current?.remove() 
+           duration: 0.5, 
+           opacity: 0, 
+           onComplete: () => preloaderRef.current?.remove() 
          });
       }
 
@@ -186,8 +181,10 @@ function AppContent() {
             <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
             <Route path="/faq" element={<MainLayout><FaqPage /></MainLayout>} />
             <Route path="/AboutUs" element={<MainLayout><AboutUs /></MainLayout>} />
+            
+            {/* These are the routes targeted by your new links */}
             <Route path="/all-tests" element={<MainLayout><TestBookingPage /></MainLayout>} />
-            <Route path="/health-plans" element={<HealthPlansPage />} />
+            <Route path="/health-plans" element={<MainLayout><HealthPlansPage /></MainLayout>} /> 
 
             <Route path="/login" element={<AuthPage />} />
             <Route path="/signup" element={<AuthPage />} />

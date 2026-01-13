@@ -19,7 +19,6 @@ import {
   Divider,
   AbsoluteCenter,
   useToast,
-
 } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -27,6 +26,7 @@ import {
   LockIcon,
   ViewIcon,
   ViewOffIcon,
+  ArrowBackIcon, // <--- 1. Import ArrowBackIcon
 } from '@chakra-ui/icons';
 import { FaUserPlus, FaSignInAlt, FaClinicMedical } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -132,15 +132,14 @@ export const AuthPage = () => {
     setShowPassword(false);
   };
 
-
   const brandDark = "#384A5C";
- return (
+
+  return (
     <Flex minH="100vh">
       {/*LEFT PANEL*/}
       <Box
         display={{ base: "none", lg: "flex" }}
         w="50%"
-
         bgGradient="linear(to-br, #607183, #384a5c, #607183)" 
         position="relative"
         overflow="hidden"
@@ -230,7 +229,25 @@ export const AuthPage = () => {
         justify="center"
         p={{ base: 6, sm: 12 }}
         bg="#e3eaf2ff"
+        position="relative" // <--- 2. Ensure relative positioning here
       >
+        
+        {/* --- 3. BACK BUTTON ADDED HERE --- */}
+        <Button
+          position="absolute"
+          top={4}
+          left={4}
+          bg="#384a5c"
+          color="white"
+          leftIcon={<ArrowBackIcon boxSize={5} />}
+          onClick={() => navigate('/')}
+          _hover={{ bg: "black", color: "#ffffff", borderColor:"#31373c" }}
+          zIndex={20}
+        >
+          Back to Home
+        </Button>
+        {/* --------------------------------- */}
+
         <MotionBox
           w="full"
           maxW="md"
