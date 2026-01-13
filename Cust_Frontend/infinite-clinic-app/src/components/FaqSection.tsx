@@ -21,7 +21,7 @@ export const FaqSection = () => {
             <AccordionItem key={index}>
               <h2>
                 <AccordionButton py={5}> 
-                  <Box as="span" flex="1" textAlign="left" fontWeight="medium" fontSize="xl"> 
+                  <Box as="span" flex="1" textAlign="left" fontWeight="medium" fontSize="22px"> 
                     {faq.q}
                   </Box>
                   <AccordionIcon />

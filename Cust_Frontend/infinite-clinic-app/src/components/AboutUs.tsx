@@ -1,4 +1,3 @@
-import React from 'react';
 import { 
   Container, 
   Heading, 
@@ -296,4 +295,4 @@ export const AboutUs = () => {
       </Container>
     </Box>
   );
-};
+};  

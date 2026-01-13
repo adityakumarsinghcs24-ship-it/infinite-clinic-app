@@ -1,17 +1,26 @@
 import { Box, Button, Container, Flex, Heading, Text, VStack, Link } from '@chakra-ui/react';
-import { Link as ScrollLink } from 'react-scroll';
+// CHANGED: Imported animateScroll to handle the "scroll to bottom" logic
+import { Link as ScrollLink, animateScroll } from 'react-scroll';
 
 export const TrustSection = () => {
+  
+  // Helper function for clarity
+  const scrollToBottom = () => {
+    animateScroll.scrollToBottom({
+      duration: 800,
+      smooth: true,
+    });
+  };
+
   return (
     <Box
       w="100%"
       position="relative"
       overflow="hidden"
-      // Clean, soft gradient background
-      bg="linear-gradient(180deg, #FFFFFF 0%, #F5FAF9 100%)"
+      bg="transparent" 
       py={{ base: 16, md: 28 }}
     >
-      {/* Soft Blur Blob for depth (No Grid) */}
+      {/* Decorative Blur Blob */}
       <Box
         position="absolute"
         top="50%"
@@ -47,15 +56,18 @@ export const TrustSection = () => {
             transition="all 0.2s"
             _hover={{ bg: "rgba(170, 214, 202, 0.5)" }}
           >
-            <Text as="span">We care for your health like family. Feel free to get in touch</Text>
+            <Text as="span">We care for your health like family. Get in touch with us now</Text>
             <Box w="1px" h="15px" bg="#384A5C" mx={3} opacity={0.3} />
+            
+            {/* CHANGED: Link now triggers animateScroll.scrollToBottom */}
             <Link 
-              href="#" 
+              onClick={scrollToBottom}
+              cursor="pointer"
               textDecoration="none" 
-              _hover={{ textDecoration: "underline", color: "#384A5C" }}
+              _hover={{ textDecoration: "underline", color: "#ffffff", bg: "#000000", borderRadius: "6px" }}
               fontWeight="700"
             >
-              Contact Us
+               Contact Us
             </Link>
           </Flex>
 
@@ -69,7 +81,7 @@ export const TrustSection = () => {
             lineHeight="1.2"
             letterSpacing="-0.02em"
           >
-            Your Neighborhood Lab for <br />
+            Your Neighbourhood Lab for <br />
             <Text as="span" bgGradient="linear(to-r, #384A5C, #5C7C99)" bgClip="text">
               Health You Can Trust
             </Text>
@@ -102,7 +114,7 @@ export const TrustSection = () => {
               _hover={{
                 transform: 'translateY(-3px)',
                 boxShadow: '0px 15px 25px rgba(56, 74, 92, 0.3)',
-                bg: '#2D3A45',
+                bg: '#31373c',
               }}
               _active={{
                 transform: 'translateY(-1px)',

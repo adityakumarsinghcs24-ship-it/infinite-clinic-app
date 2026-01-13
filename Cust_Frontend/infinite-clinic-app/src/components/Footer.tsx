@@ -9,8 +9,8 @@ export const Footer = () => {
           <VStack align="flex-start" spacing={4}>
             <Heading size="md" color="white">Get Help</Heading>
             <ChakraLink as={Link} to="/faq">FAQs</ChakraLink>
-            <Text>📞 +91 9351012745</Text>
-            <Text>📩 idcudaipur@gmail.com</Text>
+            <Text>📞 +91 1234567890</Text>
+            <Text>📩 hc&dsfwd@gmail.com</Text>
           </VStack>
 
           <VStack align="flex-start" spacing={4}>
@@ -29,7 +29,7 @@ export const Footer = () => {
       </Container>
       <Box borderTopWidth="1px" borderColor="gray.700">
         <Container maxW="container.xl" py={4} display="flex" flexDirection={{ base: 'column', md: 'row' }} justifyContent="space-between" alignItems="center">
-          <Text fontSize="sm">© 2025 Infinite Clinic Pvt. Ltd.</Text>
+          <Text fontSize="sm">© 2025 HealthCare&DiagnosticServices Pvt. Ltd.</Text>
           <Flex gap={6} mt={{ base: 4, md: 0 }}>
             <ChakraLink as={Link} to="/privacy-policy" fontSize="sm">Privacy Policy</ChakraLink>
             <ChakraLink as={Link} to="/grievance" fontSize="sm">Grievance Redressal</ChakraLink>

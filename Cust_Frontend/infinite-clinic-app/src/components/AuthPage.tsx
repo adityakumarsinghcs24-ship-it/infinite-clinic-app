@@ -19,8 +19,7 @@ import {
   Divider,
   AbsoluteCenter,
   useToast,
-  Link,
-  useColorModeValue,
+
 } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -29,7 +28,7 @@ import {
   ViewIcon,
   ViewOffIcon,
 } from '@chakra-ui/icons';
-import { FaHeart, FaUserPlus, FaSignInAlt, FaClinicMedical } from 'react-icons/fa';
+import { FaUserPlus, FaSignInAlt, FaClinicMedical } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_ENDPOINTS } from '../config/api';
@@ -135,7 +134,6 @@ export const AuthPage = () => {
 
 
   const brandDark = "#384A5C";
-  const brandLight = "#D2DEEA";
  return (
     <Flex minH="100vh">
       {/*LEFT PANEL*/}
