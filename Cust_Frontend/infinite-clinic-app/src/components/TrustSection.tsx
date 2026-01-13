@@ -4,56 +4,111 @@ import { Link as ScrollLink } from 'react-scroll';
 export const TrustSection = () => {
   return (
     <Box
-      maxW="100%"      
-      w="100%"         
-      mx={0}           
-      py={{ base: 10, md: 20 }}
-      mt={0}
-      borderRadius="xl"
+      w="100%"
       position="relative"
       overflow="hidden"
-      bgGradient="radial(circle, #ffffffff 20%, #CFE4DE 50%,  #384A5C 130%,)"
+      // Clean, soft gradient background
+      bg="linear-gradient(180deg, #FFFFFF 0%, #F5FAF9 100%)"
+      py={{ base: 16, md: 28 }}
     >
-      <Container maxW="1400px">
-        <VStack spacing={6} textAlign="center" position="relative" zIndex={1}>
+      {/* Soft Blur Blob for depth (No Grid) */}
+      <Box
+        position="absolute"
+        top="50%"
+        left="50%"
+        transform="translate(-50%, -50%)"
+        w={{ base: '300px', md: '600px' }}
+        h={{ base: '300px', md: '600px' }}
+        bg="#CFE4DE"
+        opacity="0.6"
+        filter="blur(100px)"
+        zIndex={0}
+        borderRadius="full"
+      />
+
+      <Container maxW="1200px" position="relative" zIndex={1}>
+        <VStack spacing={8} textAlign="center">
+          
+          {/* Top Badge */}
           <Flex
             align="center"
             justify="center"
-            bg="#AAD6CA"
-            color="#31373c"
-            px={4}
+            bg="rgba(170, 214, 202, 0.3)" 
+            backdropFilter="blur(5px)"
+            border="1px solid"
+            borderColor="#AAD6CA"
+            color="#2D3A45"
+            px={5}
             py={2}
             borderRadius="full"
             fontSize="sm"
-            fontWeight="medium"
-            mb={4}
+            fontWeight="600"
+            boxShadow="sm"
+            transition="all 0.2s"
+            _hover={{ bg: "rgba(170, 214, 202, 0.5)" }}
           >
-            <Box as="span" mr={2}></Box> We care for your health like family — experience hassle-free testing with us!
-            <Link href="#" ml={1} textDecoration="underline" _hover={{ color: '#ffffffff', backgroundColor: '#31373C'}}>Find us now</Link>
+            <Text as="span">We care for your health like family. Feel free to get in touch</Text>
+            <Box w="1px" h="15px" bg="#384A5C" mx={3} opacity={0.3} />
+            <Link 
+              href="#" 
+              textDecoration="none" 
+              _hover={{ textDecoration: "underline", color: "#384A5C" }}
+              fontWeight="700"
+            >
+              Contact Us
+            </Link>
           </Flex>
 
-          <Heading as="h2" size="3xl" maxW="800px">
-            Your Neighborhood Lab for Health You Can Trust
+          {/* Main Heading */}
+          <Heading
+            as="h2"
+            size="3xl"
+            fontWeight="800"
+            color="#384A5C"
+            maxW="900px"
+            lineHeight="1.2"
+            letterSpacing="-0.02em"
+          >
+            Your Neighborhood Lab for <br />
+            <Text as="span" bgGradient="linear(to-r, #384A5C, #5C7C99)" bgClip="text">
+              Health You Can Trust
+            </Text>
           </Heading>
 
-          <Text fontSize="xl" color="gray.600" maxW="600px">
-            Accurate tests, fast reports, and personalized care — all under one roof, right here in your city.
+          {/* Subtext */}
+          <Text 
+            fontSize={{ base: "lg", md: "xl" }} 
+            color="gray.600" 
+            maxW="650px" 
+            lineHeight="1.6"
+          >
+            Accurate tests, fast reports, and personalized care—all under one roof, 
+            providing clarity right here in your city.
           </Text>
 
+          {/* CTA Button */}
           <ScrollLink to="health-plans" smooth={true} duration={500} offset={-80}>
-            <Button color="#FFFFFF"
-            backgroundColor='#384A5C'
-                            _hover={{
-                  bg: '#ffffff',
-                  color: 'black',
-                  borderWidth: '2px',
-                  borderColor: '#000000'
-                }}
-            size="lg"
-            px={8}
-            py={6}
-            fontSize="xl"
-            mt={6}>
+            <Button
+              bg="#384A5C"
+              color="white"
+              size="lg"
+              h="60px"
+              px={10}
+              fontSize="lg"
+              fontWeight="bold"
+              borderRadius="full"
+              boxShadow="0px 10px 20px rgba(56, 74, 92, 0.2)"
+              transition="all 0.3s ease"
+              _hover={{
+                transform: 'translateY(-3px)',
+                boxShadow: '0px 15px 25px rgba(56, 74, 92, 0.3)',
+                bg: '#2D3A45',
+              }}
+              _active={{
+                transform: 'translateY(-1px)',
+                boxShadow: 'none',
+              }}
+            >
               View Health Plans
             </Button>
           </ScrollLink>
