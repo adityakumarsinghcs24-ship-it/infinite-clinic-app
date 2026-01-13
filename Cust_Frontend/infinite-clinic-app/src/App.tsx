@@ -11,6 +11,8 @@ import { getDisplayUsername } from './utils/userUtils';
 import { HomePage } from './components/HomePage';
 import { Footer } from './components/Footer';
 import { FaqPage } from './components/FaqPage';
+// Ensure these files are actually in src/components/
+import { Dashboard } from './components/Dashboard';
 import { AboutUs } from './components/AboutUs';
 import { HealthPlansPage } from './components/HealthPlansPage';
 import { TestBookingPage } from './components/TestBookingPage';
@@ -40,13 +42,10 @@ const Header = () => {
             <>
               <ScrollLink to="book-a-test" smooth={true} duration={500} offset={-150} style={{ cursor: 'pointer' }}>Book a test</ScrollLink>
               <ScrollLink to="health-plans" smooth={true} duration={500} offset={-30} style={{ cursor: 'pointer' }}>Health plans</ScrollLink>
-              
             </>
           ) : (
             <ChakraLink as={RouterLink} to="/" _hover={{ textDecoration: 'none' }}>Home</ChakraLink>
           )}
-          
-
           
           {path !== '/faq' && (
             <ChakraLink as={RouterLink} to="/faq" _hover={{ textDecoration: 'none' }}>
@@ -54,13 +53,7 @@ const Header = () => {
             </ChakraLink>
           )}
           
-          {path === '/faq' && (
-            <ChakraLink as={RouterLink} to="/AboutUs" _hover={{ textDecoration: 'none' }}>
-              About us
-            </ChakraLink>
-          )}
-
-          {path === '/' && (
+          {(path === '/faq' || path === '/') && (
             <ChakraLink as={RouterLink} to="/AboutUs" _hover={{ textDecoration: 'none' }}>
               About us
             </ChakraLink>
@@ -74,6 +67,8 @@ const Header = () => {
             </MenuButton>
             <MenuList>
               <MenuItem onClick={logout}>Logout</MenuItem>
+              {/* Optional: Add a link to Dashboard here too */}
+              <MenuItem as={RouterLink} to="/dashboard">My Dashboard</MenuItem>
             </MenuList>
           </Menu>
         ) : (
@@ -128,30 +123,42 @@ function AppContent() {
     };
   }, []);
 
+  // --- FIXED PRELOADER LOGIC ---
   useEffect(() => {
     const animationTimeout = setTimeout(() => {
       const destination = document.getElementById('logo-destination');
-      if (!preloaderLogoRef.current || !destination || !loadingBarRef.current) return;
       
-      gsap.set(preloaderLogoRef.current, { autoAlpha: 0 }); 
-      
-      const tl = gsap.timeline();
-      
-      tl
-        .to(loadingBarRef.current, { duration: 1.5, width: '100%', ease: 'power2.inOut' })
-        .to(preloaderLogoRef.current, { duration: 0.8, autoAlpha: 1 }, "-=0.8")
-        .to(preloaderLogoRef.current, {
-          duration: 1.5,
-          x: destination.getBoundingClientRect().left - preloaderLogoRef.current.getBoundingClientRect().left,
-          y: destination.getBoundingClientRect().top - preloaderLogoRef.current.getBoundingClientRect().top,
-          fontSize: '1rem', 
-          ease: 'power3.inOut',
-        }, "+=0.2")
-        .to(preloaderRef.current, { 
+      // Case 1: We are on the Home/Main pages where the Header exists
+      if (preloaderLogoRef.current && destination && loadingBarRef.current) {
+        gsap.set(preloaderLogoRef.current, { autoAlpha: 0 }); 
+        
+        const tl = gsap.timeline();
+        
+        tl.to(loadingBarRef.current, { duration: 1.5, width: '100%', ease: 'power2.inOut' })
+          .to(preloaderLogoRef.current, { duration: 0.8, autoAlpha: 1 }, "-=0.8")
+          .to(preloaderLogoRef.current, {
+            duration: 1.5,
+            x: destination.getBoundingClientRect().left - preloaderLogoRef.current.getBoundingClientRect().left,
+            y: destination.getBoundingClientRect().top - preloaderLogoRef.current.getBoundingClientRect().top,
+            fontSize: '1rem', 
+            ease: 'power3.inOut',
+          }, "+=0.2")
+          .to(preloaderRef.current, { 
             duration: 0.8, 
             opacity: 0, 
             onComplete: () => preloaderRef.current?.remove() 
-        }, "-=1.2");
+          }, "-=1.2");
+      } 
+      // Case 2: We are on Dashboard or pages without Header (destination is null)
+      // We just fade out the loader immediately so the user can see the page.
+      else if (preloaderRef.current) {
+         gsap.to(preloaderRef.current, { 
+            duration: 0.5, 
+            opacity: 0, 
+            onComplete: () => preloaderRef.current?.remove() 
+         });
+      }
+
     }, 100); 
 
     return () => clearTimeout(animationTimeout);
@@ -188,6 +195,8 @@ function AppContent() {
             <Route path="/debug" element={<Debug />} />
             <Route path="/simple-login" element={<SimpleLogin />} />
             <Route path="/basic-test" element={<BasicTest />} />
+
+            <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
           </Routes>
         </AnimatePresence>
       </Box>
@@ -204,4 +213,3 @@ function App() {
 }
 
 export default App;
-
