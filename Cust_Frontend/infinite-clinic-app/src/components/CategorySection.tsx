@@ -1,12 +1,12 @@
 import { Box, Circle, Flex, Heading, Text, VStack } from '@chakra-ui/react';
-import { FaTint, FaLungs, FaHeartbeat, FaVial, FaCapsules, FaArrowRight } from 'react-icons/fa';
+import { FaTint, FaDna, FaHeartbeat, FaVial, FaCapsules, FaArrowRight } from 'react-icons/fa';
 import { Link as RouterLink } from 'react-router-dom';
 
 const popularTests = [
   { name: 'Sugar Fasting', icon: FaTint },
-  { name: 'Thyroid Profile', icon: FaLungs },
-  { name: 'Lipid Profile Screen', icon: FaHeartbeat },
-  { name: 'CBC', icon: FaVial },
+  { name: 'Thyroid Profile', icon: FaDna },
+  { name: 'CBC', icon: FaHeartbeat },
+  { name: 'Lipid Profile Screen', icon: FaVial },
   { name: 'Vitamin D3', icon: FaCapsules },
   { name: 'View More', icon: FaArrowRight },
 ];
