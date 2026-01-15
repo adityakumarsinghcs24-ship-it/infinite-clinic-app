@@ -14,8 +14,8 @@ import { Link as RouterLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaMapMarkedAlt, FaArrowLeft } from 'react-icons/fa';
 import { SafeImage } from './SafeImage';
-import raikkonenImg from '../assets/raikkonen2.avif';
-import clinicTempImg from '../assets/clinic_temp.jpg';
+import raikkonenImg from '../assets/about-us-1.avif';
+import clinicTempImg from '../assets/clinic-outside.png';
 
 // Reusing the brand colors defined in AuthPage
 const BRAND_DARK = "#384A5C";
