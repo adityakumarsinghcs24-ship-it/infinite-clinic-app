@@ -107,15 +107,23 @@ export const Cart = ({ cart, onRemove }: any) => {
 
       const result = await response.json();
       console.log('Booking response:', result); // Debug log
+      console.log('Booking details received:', {
+        booking_id: result.booking_id,
+        booking_date: result.booking_date,
+        time_slot_info: result.time_slot_info,
+        total_patients_saved: result.total_patients_saved,
+        total_amount: result.total_amount
+      });
 
       if (!response.ok) {
         throw new Error(result.error || 'Booking failed');
       }
       
       // Success message with time slot info
+      const timeDisplay = result.time_slot_info?.time || selectedTimeInfo;
       toast({
         title: 'Booking Confirmed!',
-        description: `Scheduled for ${new Date(selectedDate).toLocaleDateString()} at ${selectedTimeInfo}`,
+        description: `Scheduled for ${new Date(selectedDate).toLocaleDateString()} at ${timeDisplay}`,
         status: 'success',
         duration: 5000,
         isClosable: true,
@@ -168,18 +176,46 @@ export const Cart = ({ cart, onRemove }: any) => {
             <Text fontSize="4xl" mb={4}>✅</Text>
             <Heading size="md" mb={2} color="green.500">Booking Confirmed!</Heading>
             {bookingDetails && (
-              <VStack spacing={2} mt={4}>
-                <Text fontSize="sm"><strong>Booking ID:</strong> {bookingDetails.booking_id}</Text>
-                <Text fontSize="sm"><strong>Date:</strong> {new Date(bookingDetails.booking_date).toLocaleDateString()}</Text>
-                <Text fontSize="sm"><strong>Time:</strong> {bookingDetails.time_slot_info?.time}</Text>
-                <Text fontSize="sm"><strong>Patients:</strong> {bookingDetails.total_patients_saved || 0}</Text>
-                <Text fontSize="sm"><strong>Amount:</strong> ₹{bookingDetails.total_amount}</Text>
+              <VStack spacing={2} mt={4} align="stretch" bg="gray.50" p={4} borderRadius="md" minW="300px">
+                <HStack justify="space-between">
+                  <Text fontSize="sm" color="gray.600">Booking ID:</Text>
+                  <Text fontSize="sm" fontWeight="bold">{bookingDetails.booking_id}</Text>
+                </HStack>
+                <HStack justify="space-between">
+                  <Text fontSize="sm" color="gray.600">Date:</Text>
+                  <Text fontSize="sm" fontWeight="bold">
+                    {new Date(bookingDetails.booking_date).toLocaleDateString('en-US', { 
+                      weekday: 'short', 
+                      year: 'numeric', 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })}
+                  </Text>
+                </HStack>
+                <HStack justify="space-between">
+                  <Text fontSize="sm" color="gray.600">Time:</Text>
+                  <Text fontSize="sm" fontWeight="bold">
+                    {bookingDetails.time_slot_info?.time || selectedTimeInfo || 'As per availability'}
+                  </Text>
+                </HStack>
+                {bookingDetails.total_patients_saved > 0 && (
+                  <HStack justify="space-between">
+                    <Text fontSize="sm" color="gray.600">Patients:</Text>
+                    <Text fontSize="sm" fontWeight="bold">{bookingDetails.total_patients_saved}</Text>
+                  </HStack>
+                )}
+                <Divider />
+                <HStack justify="space-between">
+                  <Text fontSize="sm" color="gray.600">Total Amount:</Text>
+                  <Text fontSize="md" fontWeight="bold" color="green.600">₹{bookingDetails.total_amount}</Text>
+                </HStack>
               </VStack>
             )}
-            <Text color="gray.600" mt={2} textAlign="center">
-              Your appointment has been scheduled successfully!
+            <Text color="gray.600" mt={4} textAlign="center" fontSize="sm">
+              Your appointment has been scheduled successfully!<br />
+              We'll contact you shortly to confirm the details.
             </Text>
-            <Button mt={4} onClick={resetBooking}>Book More Tests</Button>
+            <Button mt={4} onClick={resetBooking} colorScheme="green">Book More Tests</Button>
           </Center>
         ) : (
           <>
